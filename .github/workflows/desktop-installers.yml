@@ -17,10 +17,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Visual Studio 2022: windows-latest is now windows-2025-vs2026,
-          # whose Visual Studio 2026 the CMake 3 Dolphin 2609 needs cannot
-          # drive (it fell back to NMake, which is not installed).
-          - runner: windows-2025
+          # Visual Studio 2022: windows-latest and windows-2025 now run the
+          # windows-2025-vs2026 image, whose Visual Studio 2026 the CMake 3
+          # Dolphin 2609 needs cannot drive (it fell back to NMake, which is
+          # not installed).
+          - runner: windows-2022
             label: windows-x86_64
           - runner: ubuntu-22.04
             label: linux-x86_64
