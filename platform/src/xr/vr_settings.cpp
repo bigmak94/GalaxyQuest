@@ -5,9 +5,10 @@
 // the diorama (where Mario stands, how the world follows him), the picture
 // (SpaceWarp, Super Resolution, sharpening, the render resolution, the
 // display's refresh rate) and the game (its language, the camera's turns,
-// skipping cutscenes).  A change applies at once (the paused scene behind
-// the menu moves), except the two that are read at the start (the language,
-// the clock levels), and the settings file is updated when the menu closes:
+// spinning with a shake, skipping cutscenes).  A change applies at once
+// (the paused scene behind the menu moves), except the two that are read at
+// the start (the language, the clock levels), and the settings file is
+// updated when the menu closes:
 // only the lines of the settings changed here, so the others keep following
 // the defaults.  In the headset the panel goes out as a compositor layer of
 // its own (vr::uiLayer), sharp whatever the eye images' size.
@@ -146,6 +147,8 @@ void skipText(float value, char* out, size_t size) {
     }
 }
 
+void spinStrengthText(float value, char* out, size_t size) { snprintf(out, size, "%.0f%%", value * 100.0f); }
+
 const Item kScreenItems[] = {
     {"giant_screen", "Giant screen", "Play on a big screen, no diorama", kSwitch},
     {"screen_distance", "Screen distance", "How far away the giant screen is", kSlider, 2.5f, 10.0f, 0.5f, "%.1f m", giantOn},
@@ -179,6 +182,8 @@ const Item kGameItems[] = {
     {"language", "Language", nullptr, kStepper, 0, 0, 0, nullptr, severalLanguages, hintLanguage, languageOptions, languageText, languageGet,
      languageSet, languageFile},
     {"invert_camera", "Invert camera", nullptr, kSwitch, 0, 0, 0, nullptr, nullptr, hintInvert},
+    {"spin_shake_strength", "Spin shake strength", "Lower needs a gentler shake", kSlider, 0.2f, 1.6f, 0.1f, nullptr, nullptr, nullptr, nullptr,
+     spinStrengthText},
     {"skip_hold", "Hold A to skip", "Cutscenes and dialogues", kStepper, 0.0f, 3.0f, 0.25f, nullptr, nullptr, nullptr, nullptr, skipText},
 };
 

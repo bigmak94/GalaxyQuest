@@ -877,7 +877,7 @@ void updateInput(App& a, XrTime time) {
         if (XR_SUCCEEDED(xrLocateSpace(a.aimSpace[h], a.appSpace, time, &vloc)) && (vel.velocityFlags & XR_SPACE_VELOCITY_LINEAR_VALID_BIT)) {
             const XrVector3f& v = vel.linearVelocity;
             float speed = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-            if (speed > 2.5f && time - lastFlick[h] > 300000000) {  // m/s; 0.3 s between spins
+            if (speed > vr::spinShakeSpeed() && time - lastFlick[h] > 300000000) {  // m/s; 0.3 s between spins
                 (h == 1 ? spinFrames : nunSpinFrames) = 6;
                 lastFlick[h] = time;
             }

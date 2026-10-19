@@ -426,6 +426,7 @@ float sStereoFar = 0.95f;     // the farthest things' distance apart on the scre
 float sStereoSize = 0.8f;     // each picture's size relative to the screen's single one (stereo_resolution)
 float sSkipHold = 1.0f;       // seconds A is held to skip a cutscene (skip_hold)
 bool sInvertCamera = true;    // the right stick's turns swapped (invert_camera)
+float sSpinShakeStrength = 1.0f;  // controller speed needed to spin, relative to the original 2.5 m/s
 // The room around the giant screen instead of the dark (passthrough): the
 // eye images are see-through where nothing is drawn, over the headset's
 // passthrough layer (xr_app.cpp).
@@ -914,6 +915,7 @@ vr::Setting sSettings[] = {
          sInvertCamera = x != 0.0f;
          port_input_set_camera_inverted(sInvertCamera);
      }},
+    {"spin_shake_strength", 0.2f, 1.6f, 0.0f, NUMBER(sSpinShakeStrength)},
     {"resolution", 0.5f, 2.0f, 0.0f, NUMBER(sResolution)},
     {"min_resolution", 0.5f, 1.25f, 0.0f, NUMBER(sMinScale)},
     {"refresh_rate", 60.0f, 144.0f, 0.0f, NUMBER(sRefreshRate)},
@@ -1019,6 +1021,7 @@ int refreshRates(float* rates, int max) {
     return n;
 }
 bool invertCamera() { return sInvertCamera; }
+float spinShakeSpeed() { return 2.5f * sSpinShakeStrength; }
 bool passthroughWanted() { return sPassthrough && sGiantScreen; }
 float passthroughShown() { return sPassAmount; }
 bool passthroughAvailable() { return sPassAvailable; }

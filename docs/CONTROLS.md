@@ -224,6 +224,11 @@ has no effect as things are (the 3D depth while the 3D is off) is dimmed.
   camera the way you push it, as the Wii's D-pad did. It only swaps the
   camera's turns: the D-pad's left and right still turn pages the usual
   way.
+- **Spin shake strength**: how fast to shake either controller to spin,
+  20% to 160% in steps of 10%. Lower values need a gentler shake. The
+  default, 100%, keeps the original 2.5 m/s threshold. Drag the slider or
+  use − and +; the mark under the slider is the default. Changes apply
+  immediately to both controllers; B and Y still spin as usual.
 - **Hold A to skip**: how long to hold A to skip a cutscene or a dialogue,
   1 s by default; at 0 ("Off") nothing is skipped.
 
@@ -266,6 +271,9 @@ skip_hold = 1
 # goes round Mario to the left); 0: the stick moves the camera the way it is
 # pushed, as the Wii's D-pad did
 invert_camera = 1
+# Speed needed to shake either controller to spin, relative to the original
+# 2.5 m/s (0.2 to 1.6; 1 = 100%, the default). Lower needs a gentler shake.
+spin_shake_strength = 1
 # The game's language, among those the disc has: english, french, german,
 # spanish or italian on the European disc, english, french or spanish on
 # the American one (the Japanese and Korean discs have their own only).

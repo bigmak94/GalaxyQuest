@@ -47,6 +47,8 @@ void init();
 //   vignette          strength of the vignette while turning, 0..1 (1)
 //   cutaway           1 to see Mario through walls, 0 to turn it off (1)
 //   skip_hold         seconds A is held to skip a cutscene, 0 = never (1)
+//   spin_shake_strength  controller speed needed to spin, relative to the
+//                     original 2.5 m/s, 0.2 .. 1.6 (1); lower is gentler
 //   resolution        largest eye size relative to the headset's recommended
 //                     size (1.6); the render scale moves between
 //                     min_resolution and this with the GPU load (dynamic
@@ -131,6 +133,8 @@ int refreshRates(float* rates, int max);
 bool highClocks();
 // The right stick's camera turns swapped (invert_camera).
 bool invertCamera();
+// Controller speed needed for a spin gesture, m/s (spin_shake_strength).
+float spinShakeSpeed();
 // The room around the giant screen (the passthrough setting).  Wanted: the
 // setting is on and the giant screen with it, so the headset's passthrough
 // should run.  Shown: how far the eye images are see-through around the
