@@ -342,7 +342,34 @@ disc again with the current one.
   install` command. Your saves and game files stay.
 - **Uninstalling** deletes the saves and the game files with the app.
 - An APK you built yourself is signed with your own key. To switch between
-  it and the released one, uninstall first (and lose the saves).
+  it and the released one, uninstall first (back up the saves first, see
+  below).
+
+### Backing up and moving your saves
+
+The saves stay in the app's private storage on the headset. To keep a copy
+on your computer, connect the headset as for the installation and run,
+in the converter's folder (`GalaxyQuest-converter.zip` on the release page;
+it needs Python and adb as in the [manual installation](#installing-manually),
+also if you installed with the Windows installer):
+
+```
+python tools/saves.py backup
+```
+
+(On Windows: `py tools/saves.py backup`.)
+
+It writes `GalaxyQuest-saves-<date>.tar` (a few dozen kB). To put it back,
+after a reinstall or on another headset with GalaxyQuest installed:
+
+```
+python tools/saves.py restore GalaxyQuest-saves-<date>.tar
+```
+
+Restoring closes the app and replaces its saves on that headset (it backs
+up the ones it replaces first, next to the file). A save belongs to the
+disc it was made with: one from the European disc shows up when you play
+the European disc, one from the American disc the American one.
 
 ## Controls
 

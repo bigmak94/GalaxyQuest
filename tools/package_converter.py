@@ -4,9 +4,10 @@
   python tools/package_converter.py [output zip]   (default: out/GalaxyQuest-converter.zip)
 
 To play, nobody needs the source: the APK and this zip are enough.  The zip
-holds the disc converter (tools/cook/cook.py with the modules it imports)
-and the script that copies the converted files to the headset
-(tools/push_data.py), at the paths they have here, so the commands in the
+holds the disc converter (tools/cook/cook.py with the modules it imports),
+the script that copies the converted files to the headset
+(tools/push_data.py) and the one that backs up and restores the saves
+(tools/saves.py), at the paths they have here, so the commands in the
 README work as they are from the unzipped folder.  They only use Python's
 standard library.
 
@@ -20,7 +21,7 @@ import zipfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FOLDER = 'GalaxyQuest-converter'
-ENTRY_POINTS = ['tools/cook/cook.py', 'tools/push_data.py']
+ENTRY_POINTS = ['tools/cook/cook.py', 'tools/push_data.py', 'tools/saves.py']
 # Where the entry points look for their modules (cook.py's sys.path).
 MODULE_DIRS = ['tools/cook', 'tools']
 
@@ -62,6 +63,14 @@ Windows: click in File Explorer's address bar, type cmd, press Enter).
    Without adb, copy the "cooked" folder to the headset with the computer's
    file manager (for example into Download) and pick it on the app's setup
    screen.
+
+Your saves stay in the app on the headset, and uninstalling it deletes
+them.  To keep a copy on the computer, or to move them to another headset:
+
+       python tools/saves.py backup
+       python tools/saves.py restore GalaxyQuest-saves-<date>.tar
+
+(restore on the headset they go to, with GalaxyQuest installed there).
 
 The full instructions: https://github.com/bigmak94/GalaxyQuest#installing
 """
