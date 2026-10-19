@@ -72,11 +72,18 @@ struct App {
     XrSession session = XR_NULL_HANDLE;
     // The app's space: the runtime's LOCAL space turned and moved so the
     // player faces the screen where they stand when a session starts (see
-    // updateAppSpace).
+    // updateAppSpace), and pitched by the view tilt (setTiltedAppSpace).
     XrSpace appSpace = XR_NULL_HANDLE;
     XrSpace localSpace = XR_NULL_HANDLE, viewSpace = XR_NULL_HANDLE;
     bool facePlayerDue = false;  // a session began, or the player recentred the view: the app's space is set to the head's pose
     XrTime facePlayerAfter = 0;  // not before this time (when a recentring takes effect)
+    // Where the head was and which way it faced (about the vertical) when
+    // the app's space was last set to it; the app's space is that, pitched
+    // up by the view tilt (vr::viewTilt, degrees).
+    bool levelValid = false;
+    float levelYaw = 0.0f;
+    XrVector3f levelPos{};
+    float tiltApplied = 0.0f;
     // A session's first seconds: the head's pose in LOCAL is watched for a
     // jump (the headset finding its place in the room after waking up).
     bool faceWatchStart = false;
@@ -909,7 +916,7 @@ void updateInput(App& a, XrTime time) {
     bool aimTracked = aimOriented && (loc.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT);
     xm::Quat aimQ{loc.pose.orientation.x, loc.pose.orientation.y, loc.pose.orientation.z, loc.pose.orientation.w};
     if (aimOriented) {
-        const xm::Vec3 down{0.0f, -1.0f, 0.0f};  // the app space is gravity aligned
+        const xm::Vec3 down{0.0f, -1.0f, 0.0f};  // the app space's: gravity, or the view's down when it is tilted
         pad.tilted = 1;
         pad.downX = xm::dot(down, xm::rotate(aimQ, {1, 0, 0}));
         pad.downY = xm::dot(down, xm::rotate(aimQ, {0, 1, 0}));
@@ -1125,9 +1132,32 @@ void setAppSpace(App& a, const XrPosef& poseInLocal) {
     a.appSpace = space;
 }
 
+// The view tilt (screen_tilt, diorama_tilt): the app's space is pitched up
+// about the head's position at its origin, so the whole scene (the diorama
+// or the screen, the panels, the pointer) is lifted together and the
+// controllers stay lined up with it.  Looking straight ahead (or lying
+// back) then shows what was below the eyes.
+void setTiltedAppSpace(App& a) {
+    float tilt = vr::viewTilt();
+    float sy = sinf(a.levelYaw * 0.5f), cy = cosf(a.levelYaw * 0.5f);
+    float sp = sinf(tilt * 0.5f * 0.017453293f), cp = cosf(tilt * 0.5f * 0.017453293f);
+    XrPosef pose{};
+    pose.orientation = {cy * sp, sy * cp, -sy * sp, cy * cp};  // the turn about the vertical, then the pitch about the right axis
+    pose.position = a.levelPos;
+    setAppSpace(a, pose);
+    if (tilt != a.tiltApplied) {
+        port_log("vr: view tilt %.0f deg", tilt);
+    }
+    a.tiltApplied = tilt;
+}
+
 void dropHeldEye(App& a);
 
 void updateAppSpace(App& a, XrTime time) {
+    if (a.levelValid && vr::viewTilt() != a.tiltApplied) {
+        setTiltedAppSpace(a);  // changed on the settings panel, or the giant screen switched on or off
+        dropHeldEye(a);
+    }
     if (a.faceWatchStart) {
         a.faceWatchStart = false;
         a.faceWatchUntil = time + 5000000000ll;
@@ -1167,10 +1197,10 @@ void updateAppSpace(App& a, XrTime time) {
         return;
     }
     a.facePlayerDue = false;
-    XrPosef pose{};
-    pose.orientation = {0.0f, sinf(yaw * 0.5f), 0.0f, cosf(yaw * 0.5f)};
-    pose.position = loc.pose.position;
-    setAppSpace(a, pose);
+    a.levelValid = true;
+    a.levelYaw = yaw;
+    a.levelPos = loc.pose.position;
+    setTiltedAppSpace(a);
     dropHeldEye(a);
     // The head in the new space, for the log: straight ahead at its origin.
     float now = 0.0f;
@@ -1182,7 +1212,7 @@ void updateAppSpace(App& a, XrTime time) {
     }
     port_log("vr: the view starts where the player faces: %.0f deg round from the runtime's own, head at %.2f %.2f %.2f m there (now %.1f deg off "
              "straight ahead)",
-             yaw * 57.29578f, pose.position.x, pose.position.y, pose.position.z, now);
+             yaw * 57.29578f, a.levelPos.x, a.levelPos.y, a.levelPos.z, now);
 }
 
 // Eye poses and fields of view at `time`.

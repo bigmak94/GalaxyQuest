@@ -71,6 +71,10 @@ void init();
 //                     the game's own camera; 0 for the diorama
 //   screen_distance   how far away the giant screen is, metres (4.5; it is
 //                     5.33 m wide, so 61 deg across at 4.5 m, 30 at 10 m)
+//   screen_tilt, diorama_tilt  how far the view is pitched up on the giant
+//                     screen and in the diorama, degrees, -45 .. 90 (0):
+//                     the whole scene is lifted round the head, to play
+//                     looking straight ahead instead of down, or lying back
 //   stereo_screen     1 to show the giant screen's picture in stereoscopic
 //                     3D, a picture for each eye from the game's camera
 //                     moved a little to either side (0, the default: the
@@ -135,6 +139,9 @@ bool highClocks();
 bool invertCamera();
 // Controller speed needed for a spin gesture, m/s (spin_shake_strength).
 float spinShakeSpeed();
+// The view tilt for the way the game is shown now, degrees up
+// (screen_tilt on the giant screen, diorama_tilt otherwise).
+float viewTilt();
 // The room around the giant screen (the passthrough setting).  Wanted: the
 // setting is on and the giant screen with it, so the headset's passthrough
 // should run.  Shown: how far the eye images are see-through around the

@@ -130,6 +130,12 @@ has no effect as things are (the 3D depth while the 3D is off) is dimmed.
   of 0.5 m, 4.5 m by default. Drag the slider or use − and +; the mark
   under the slider is the default. The screen is 5.33 m wide, so it spans
   61 degrees at 4.5 m and 30 degrees (a TV seen from the couch) at 10 m.
+- **View tilt** (off by default, −20 to 90 degrees in steps of 5) lifts the
+  screen and everything with it (the panels, the pointer) round your head,
+  to play looking up, reclined or lying down (60 to 90 degrees). The
+  controllers stay lined up with what you see, and their tilt (the Star
+  Ball, Ray surfing) is read from the tilted view, so it works lying back
+  too. It stays as you set it when you recentre the view.
 - **Passthrough** (off by default) shows your own room around the giant
   screen, through the headset's cameras, instead of the dark. It fades in
   and out as you switch it. It only shows on the giant screen: the diorama
@@ -162,6 +168,12 @@ has no effect as things are (the 3D depth while the 3D is off) is dimmed.
 - **Diorama distance**: how far in front of you Mario stands, 0.6 m to 4 m,
   1.5 m by default (slider, or − and + for 10 cm).
 - **Height**: how far below your eyes he stands, 0.8 m by default.
+- **View tilt** (off by default, −20 to 90 degrees in steps of 5): the
+  diorama is below your eyes, so you look down at Mario the whole time. A
+  tilt lifts the whole world round your head, as the screen's own does
+  (above): about 30 degrees brings Mario straight ahead, so you can play
+  without bending your neck and see past a planet's horizon; more is for
+  playing reclined or lying down. The ground then slopes up away from you.
 - **World size**: the size of the world, 1.0 by default (1.5 is half as big
   again).
 - **Follow smoothing** and **Turn smoothing**: how gently the world follows
@@ -309,6 +321,11 @@ sharpening_strength = 0.5
 # 5.33 m wide: 61 degrees across at 4.5 m, 30 degrees at 10 m).
 giant_screen = 1
 screen_distance = 4.5
+# How far the view is lifted (pitched up round your head), in degrees, on
+# the giant screen and in the diorama (-45 to 90, 0 = off): to play looking
+# straight ahead instead of down, reclined or lying down.
+screen_tilt = 0
+diorama_tilt = 0
 # 1 shows your room around the giant screen (the headset's passthrough)
 # instead of the dark; 0 is the default
 passthrough = 0

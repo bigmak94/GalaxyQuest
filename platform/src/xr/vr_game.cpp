@@ -427,6 +427,9 @@ float sStereoSize = 0.8f;     // each picture's size relative to the screen's si
 float sSkipHold = 1.0f;       // seconds A is held to skip a cutscene (skip_hold)
 bool sInvertCamera = true;    // the right stick's turns swapped (invert_camera)
 float sSpinShakeStrength = 1.0f;  // controller speed needed to spin, relative to the original 2.5 m/s
+// How far the view is pitched up, degrees, on the giant screen and in the
+// diorama (screen_tilt, diorama_tilt; xr_app.cpp tilts the app's space).
+float sScreenTilt = 0.0f, sDioramaTilt = 0.0f;
 // The room around the giant screen instead of the dark (passthrough): the
 // eye images are see-through where nothing is drawn, over the headset's
 // passthrough layer (xr_app.cpp).
@@ -905,6 +908,7 @@ vr::Setting sSettings[] = {
     {"vignette", 0.0f, 1.0f, 0.0f, NUMBER(sVignetteStrength)},
     {"cutaway", 0.0f, 1.0f, 0.0f, FLAG(sCutawayOn)},
     {"turn_with_camera", 0.0f, 1.0f, 0.0f, FLAG(sRigParams.turnWithCamera)},
+    {"diorama_tilt", -45.0f, 90.0f, 0.0f, NUMBER(sDioramaTilt)},
     {"skip_hold", 0.0f, 10.0f, 0.0f, [] { return sSkipHold; },
      [](float x) {
          sSkipHold = x;
@@ -926,6 +930,7 @@ vr::Setting sSettings[] = {
     {"sharpening_strength", 0.0f, 1.0f, 0.0f, NUMBER(sSharpness)},
     {"giant_screen", 0.0f, 1.0f, 0.0f, FLAG(sGiantScreen)},
     {"screen_distance", 1.0f, 20.0f, 0.0f, NUMBER(sScreenDistance)},
+    {"screen_tilt", -45.0f, 90.0f, 0.0f, NUMBER(sScreenTilt)},
     {"passthrough", 0.0f, 1.0f, 0.0f, FLAG(sPassthrough)},
     {"stereo_screen", 0.0f, 1.0f, 0.0f, FLAG(sStereoScreen)},
     {"stereo_depth", 0.25f, 3.0f, 0.0f, NUMBER(sStereoDepth)},
@@ -1022,6 +1027,7 @@ int refreshRates(float* rates, int max) {
 }
 bool invertCamera() { return sInvertCamera; }
 float spinShakeSpeed() { return 2.5f * sSpinShakeStrength; }
+float viewTilt() { return sGiantScreen ? sScreenTilt : sDioramaTilt; }
 bool passthroughWanted() { return sPassthrough && sGiantScreen; }
 float passthroughShown() { return sPassAmount; }
 bool passthroughAvailable() { return sPassAvailable; }

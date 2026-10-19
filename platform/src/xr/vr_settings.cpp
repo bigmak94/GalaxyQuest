@@ -1,8 +1,9 @@
 // The VR settings panel: a small panel beside the game's pause menu, drawn by
 // the VR layer and worked with the pointer (aim the right controller, press
 // A or the trigger).  It holds the settings of petari_vr.ini, on four tabs:
-// the giant screen (its distance, the room around it, its stereoscopic 3D),
-// the diorama (where Mario stands, how the world follows him), the picture
+// the giant screen (its distance and tilt, the room around it, its
+// stereoscopic 3D), the diorama (where Mario stands, the view's tilt, how
+// the world follows him), the picture
 // (SpaceWarp, Super Resolution, sharpening, the render resolution, the
 // display's refresh rate) and the game (its language, the camera's turns,
 // spinning with a shake, skipping cutscenes).  A change applies at once
@@ -93,6 +94,10 @@ void hintPassthrough(char* out, size_t size) {
 }
 void hintStereo(char* out, size_t size) { hintScreenOnly(out, size, "A picture for each eye"); }
 void hintDiorama(char* out, size_t size) { snprintf(out, size, "%s", giantOn() ? "Used while the giant screen is off" : "How far away Mario stands"); }
+void hintScreenTilt(char* out, size_t size) { hintScreenOnly(out, size, "Lift it all to look up or lie back"); }
+void hintDioramaTilt(char* out, size_t size) {
+    snprintf(out, size, "%s", giantOn() ? "Used while the giant screen is off" : "Lift it all to look ahead, not down");
+}
 void hintScale(char* out, size_t size) {
     if (giantOn()) {
         snprintf(out, size, "The screen's picture is at %.2f now", roundf(vr::screenPictureScale() * 100.0f) / 100.0f);
@@ -149,9 +154,18 @@ void skipText(float value, char* out, size_t size) {
 
 void spinStrengthText(float value, char* out, size_t size) { snprintf(out, size, "%.0f%%", value * 100.0f); }
 
+void tiltText(float value, char* out, size_t size) {
+    if (fabsf(value) < 0.5f) {
+        snprintf(out, size, "Off");
+    } else {
+        snprintf(out, size, "%.0f deg", value);
+    }
+}
+
 const Item kScreenItems[] = {
     {"giant_screen", "Giant screen", "Play on a big screen, no diorama", kSwitch},
     {"screen_distance", "Screen distance", "How far away the giant screen is", kSlider, 2.5f, 10.0f, 0.5f, "%.1f m", giantOn},
+    {"screen_tilt", "View tilt", nullptr, kStepper, -20.0f, 90.0f, 5.0f, nullptr, giantOn, hintScreenTilt, nullptr, tiltText},
     {"passthrough", "Passthrough", nullptr, kSwitch, 0, 0, 0, nullptr, passthroughUsable, hintPassthrough},
     {"stereo_screen", "Stereoscopic 3D", nullptr, kSwitch, 0, 0, 0, nullptr, giantOn, hintStereo},
     {"stereo_depth", "3D depth", "More brings the world out of the screen", kStepper, 0.25f, 3.0f, 0.25f, "%.2f", stereoOn},
@@ -161,6 +175,7 @@ const Item kScreenItems[] = {
 const Item kDioramaItems[] = {
     {"diorama_distance", "Diorama distance", nullptr, kSlider, 0.6f, 4.0f, 0.1f, "%.1f m", nullptr, hintDiorama},
     {"diorama_height", "Height", "Mario below your eyes", kStepper, 0.0f, 1.6f, 0.05f, "%.2f m"},
+    {"diorama_tilt", "View tilt", nullptr, kStepper, -20.0f, 90.0f, 5.0f, nullptr, nullptr, hintDioramaTilt, nullptr, tiltText},
     {"diorama_scale", "World size", "1.0 is the usual size", kStepper, 0.5f, 3.0f, 0.1f, "%.1f"},
     {"follow_smoothing", "Follow smoothing", "How gently the world follows Mario", kStepper, 0.0f, 0.5f, 0.02f, "%.2f s"},
     {"turn_smoothing", "Turn smoothing", "How gently it turns with gravity", kStepper, 0.0f, 1.5f, 0.05f, "%.2f s"},
@@ -192,7 +207,7 @@ struct Tab {
     const Item* items;
     int count;
 };
-const int kMaxItems = 8;  // on a tab
+const int kMaxItems = 9;  // on a tab
 #define TAB(name, items) {name, items, (int)(sizeof(items) / sizeof(items[0]))}
 #define FITS(items) static_assert(sizeof(items) / sizeof(items[0]) <= kMaxItems, "too many settings on a tab")
 const Tab kTabs[] = {TAB("Screen", kScreenItems), TAB("Diorama", kDioramaItems), TAB("Picture", kPictureItems), TAB("Game", kGameItems)};
@@ -233,7 +248,7 @@ void itemHint(const Item& item, char* out, size_t size) {
 // ---------------------------------------------------------------------------
 // The panel
 // ---------------------------------------------------------------------------
-const int kTexW = 640, kTexH = 1300;
+const int kTexW = 640, kTexH = 1424;
 const float kWidthM = 0.42f;  // metres; height from the texture's aspect
 // Beside the pause menu's buttons, in the space right of them on the HUD
 // panel (see kHudCenter in vr_game.cpp), a little in front of it and turned
