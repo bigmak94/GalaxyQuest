@@ -144,7 +144,7 @@ class InstallerTests(unittest.TestCase):
 
             def extract(image, destination):
                 calls.append('extract')
-                self.assertEqual(image, game)
+                self.assertEqual(Path(image).resolve(), game.resolve())  # macOS: /var is /private/var
                 self.assertEqual(Path(destination).name, 'extracted')
                 if extraction_fails:
                     raise install.InstallError('Extraction failed')
