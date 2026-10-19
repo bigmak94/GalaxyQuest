@@ -292,6 +292,17 @@ void MoviePlayingSequence::exePlayWait() {
 
 void MoviePlayingSequence::exePlayStart() {
     if (MR::isFirstStep(this)) {
+#ifdef TARGET_PC
+        // A conversion without the movies (cook.py without --with-movies)
+        // still lists them in the disc's file table: the player would wait
+        // for the missing file forever behind the closed wipe.  The story
+        // goes on as at the movie's end.
+        if (!port_dvd_file_present(::getMovieName(mInfo))) {
+            ::closeWipe(WipeType(mInfo->mCloseWipeType), -1);
+            setNerve(GET_NERVE(MoviePlayingSequence, HostTypeEndWait));
+            return;
+        }
+#endif
         MR::startMoviePlayer(::getMovieName(mInfo));
         MR::tryFrameToScreenCinemaFrame();
     } else if (MR::isMoviePlayerPlaying()) {

@@ -317,6 +317,11 @@ extern "C" s32 DVDConvertPathToEntrynum(const char* path) {
     return (s32)dir;
 }
 
+extern "C" int port_dvd_file_present(const char* path) {
+    s32 entry = DVDConvertPathToEntrynum(path);
+    return entry >= 0 && !sFst[entry].isDir && entrySize((u32)entry) > 0;
+}
+
 // ---------------------------------------------------------------------------
 // Read worker
 // ---------------------------------------------------------------------------

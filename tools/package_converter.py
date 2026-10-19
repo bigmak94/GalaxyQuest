@@ -46,7 +46,7 @@ Windows: click in File Explorer's address bar, type cmd, press Enter).
        python tools/cook/cook.py extracted cooked --with-movies
 
    Without --with-movies the prologue and ending movies are left out (2.3 GB
-   less) and play as a black screen.
+   less): the game skips them.
 
 3. Copy them to the headset, connected over USB, with adb (the Android
    platform tools) installed and GalaxyQuest.apk already on the headset:

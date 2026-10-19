@@ -269,7 +269,7 @@ from the game's program (`sys/main.dol`), which is why it wants the whole
 extracted disc.
 
 - Without `--with-movies` the prologue and ending movies are left out
-  (2.3 GB less) and play as a black screen.
+  (2.3 GB less): the game skips them and the story goes on.
 - If your extracted disc is somewhere else, give its path instead of
   `extracted`, in quotes if it has spaces:
   `python tools/cook/cook.py "D:\Games\SMG extracted" cooked --with-movies`.

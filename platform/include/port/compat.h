@@ -160,6 +160,10 @@ int port_skip_interrupt(void);
 // another stage, or in the star select): the fast-forward stops, and the
 // change runs at the normal pace, drawn.
 void port_skip_scene_change(void);
+// Whether the disc file at `path` has been converted (has a file of its
+// own): a conversion without the movies leaves them out, though the disc's
+// file table still lists them (platform/src/dvd/dvd.cpp).
+int port_dvd_file_present(const char* path);
 // The VR controller's menu buttons (X, Menu) ask for the pause menu with a
 // single press (wpad.cpp): the game takes the request at the first moment it
 // allows the pause, within 1.5 s of the press (port_input_take_pause_request
