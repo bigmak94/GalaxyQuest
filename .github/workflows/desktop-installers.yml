@@ -17,18 +17,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Visual Studio 2022: windows-latest and windows-2025 now run the
-          # windows-2025-vs2026 image, whose Visual Studio 2026 the CMake 3
-          # Dolphin 2609 needs cannot drive (it fell back to NMake, which is
-          # not installed).
-          - runner: windows-2022
+          # Dolphin 2609 builds only with Visual Studio 2026 (pch.h stops
+          # anything older), which CMake knows from 4.2 on; the others keep
+          # CMake 3.
+          - runner: windows-latest
             label: windows-x86_64
+            cmake: cmake>=4.2
           - runner: ubuntu-22.04
             label: linux-x86_64
+            cmake: cmake>=3.25,<4
           - runner: macos-15
             label: macos-arm64
+            cmake: cmake>=3.25,<4
           - runner: macos-15-intel
             label: macos-x86_64
+            cmake: cmake>=3.25,<4
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +54,7 @@ jobs:
           libxrandr-dev libxi-dev libasound2-dev libpulse-dev libbluetooth-dev
           libhidapi-dev libcurl4-openssl-dev
       - name: Install build requirements
-        run: python -m pip install -r tools/installer-requirements.txt "cmake>=3.25,<4"
+        run: python -m pip install -r tools/installer-requirements.txt "${{ matrix.cmake }}"
       - name: Build Dolphin's command-line extractor
         shell: python
         run: |
@@ -65,6 +68,10 @@ jobs:
                        '-DUSE_MGBA=OFF', '-DUSE_UPNP=OFF',
                        '-DUSE_DISCORD_PRESENCE=OFF', '-DUSE_RETRO_ACHIEVEMENTS=OFF',
                        '-DENCODE_FRAMEDUMPS=OFF', '-DUSE_SYSTEM_LIBS=OFF']
+          if sys.platform == 'win32':
+              # CMake 4 refuses projects asking for CMake older than 3.5,
+              # as some of Dolphin's bundled libraries do.
+              configure += ['-DCMAKE_POLICY_VERSION_MINIMUM=3.5']
           if sys.platform.startswith('linux'):
               configure += ['-DCMAKE_C_COMPILER=gcc-12', '-DCMAKE_CXX_COMPILER=g++-12']
           subprocess.run(configure, check=True)
