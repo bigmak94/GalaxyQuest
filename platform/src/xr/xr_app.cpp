@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <memory>
 #include <string>
@@ -1931,6 +1932,14 @@ extern "C" __attribute__((visibility("default"))) void port_android_main(android
             renderFrame(a);
         }
     }
+    // The process ends here, at once.  exit() ran every library's static
+    // destructors (the game's, the GPU driver's, the OpenXR runtime's)
+    // while the game's threads still ran, with the activity's onDestroy
+    // waiting for this thread: it crashed in the game's heap on every quit
+    // (a tombstone each time), and a destructor that waits for a thread
+    // could as well hang.  Nothing needs them: the log is written line by
+    // line, the saves are synced as they are written, and the shader cache
+    // is flushed after each program.
     port_log("exiting");
-    exit(0);
+    _exit(0);
 }
