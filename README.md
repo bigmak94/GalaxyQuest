@@ -10,7 +10,7 @@
 
 # GalaxyQuest
 
-**Play Super Mario Galaxy in virtual reality, natively on Meta Quest 2 and 3.**
+**Play Super Mario Galaxy in virtual reality, natively on Meta Quest 2, 3 and 3S.**
 
 Mario's universe becomes a living diorama in front of you: planets float at
 arm's length, you lean in to look around them, and you aim at star bits with
@@ -86,8 +86,7 @@ story and saves all come from the game's own code and your own game files.
 
 ## What you need
 
-- A **Meta Quest 2 or 3** (both tested and working; a Quest 3S should work
-  too but is untested) with
+- A **Meta Quest 2, 3 or 3S** (all three tested and working) with
   about 7 GB free, and a **USB-C data cable** to connect it to the computer
   (a charge-only cable does not work).
 - **Your Super Mario Galaxy disc**, dumped as an ISO, RVZ or WBFS image (for
