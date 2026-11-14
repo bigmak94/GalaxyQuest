@@ -89,6 +89,9 @@ GameScene::~GameScene() {
     MR::destroySceneMessage();
     NPCFunction::deleteNPCData();
     MR::onStarPointerSceneOut();
+#ifdef TARGET_PC
+    port_gx_release_kept_efb_copies();  // the map board's copy (GalaxyMapController) goes with the scene
+#endif
 }
 
 void GameScene::init() {

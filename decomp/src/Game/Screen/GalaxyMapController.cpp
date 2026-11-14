@@ -104,6 +104,9 @@ void GalaxyMapController::init(const JMapInfoIter& rIter) {
         _38 = new JUTTexture(getFbWidth() / 2, MR::getScreenHeight() / 2, GX_TF_RGB565);
     }
 
+#ifdef TARGET_PC
+    port_gx_keep_efb_copy(_38->mImage);  // shown on the Comet Observatory's map board; released with the scene
+#endif
     if (MR::startFunctionAsyncExecuteOnMainThread(MR::Functor(this, &GalaxyMapController::capture), "GalaxyMapController::capture")) {
         MR::waitForEndFunctionAsyncExecute("GalaxyMapController::capture");
     }

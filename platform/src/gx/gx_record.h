@@ -84,7 +84,7 @@ enum Cmd : uint32_t {
     CMD_BP,            // reg << 24 | value
     CMD_DRAW,          // primitive, flags, first word, vertex count
     CMD_TEX,           // unit, texture index into Frame::textures (or ~0u for an EFB copy)
-    CMD_TEX_EFB,       // unit, EFB copy id, width, height, destination address
+    CMD_TEX_EFB,       // unit (| 0x100: a kept copy, port_gx_keep_efb_copy), EFB copy id, width, height, destination address
     CMD_EFB_COPY,      // copy id, BP 0x49, 0x4A, 0x4B, 0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52
     CMD_MARKER,        // kind
     CMD_CAMERA,        // 33 words: view[12] (world->view, 3x4 rows), pos[3], watch[3], up[3], watchUp[3], fovy, flags, aspect, player[3], playerUp[3]
@@ -151,6 +151,9 @@ private:
 };
 
 FrameQueue& frameQueue();
+
+// Whether the game asked to keep the EFB copy to `addr` (port_gx_keep_efb_copy).
+bool isKeptEfbCopy(uint32_t addr);
 
 // Installs the recording backend (game thread side of the renderer).
 void useRecorderBackend();

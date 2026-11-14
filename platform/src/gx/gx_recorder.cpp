@@ -506,6 +506,16 @@ struct TexEntry {
     u64 checkedFrame = ~0ull;
 };
 
+// Destinations of EFB copies the game asked to keep (port_gx_keep_efb_copy).
+std::atomic<uint32_t> sKeptCopies[8];
+
+bool isKeptCopy(u32 addr) {
+    for (const std::atomic<uint32_t>& slot : sKeptCopies) {
+        if (slot.load(std::memory_order_relaxed) == addr) return true;
+    }
+    return false;
+}
+
 struct EfbCopyInfo {
     u32 id;
     u32 width, height, format;
@@ -933,7 +943,7 @@ struct Recorder final : Backend {
                         }
                     }
                     c.push_back(CMD_TEX_EFB);
-                    c.push_back(unit);
+                    c.push_back(unit | (isKeptCopy(addr) ? 0x100u : 0u));
                     c.push_back(binding & 0x7FFFFFFF);
                     c.push_back(info ? info->width : 1);
                     c.push_back(info ? info->height : 1);
@@ -1077,9 +1087,10 @@ struct Recorder final : Backend {
         frame = frameQueue().publish(std::move(frame));
         resetBindings();
         snapshot();
-        // Drop EFB copy associations that were not refreshed recently.
+        // Drop EFB copy associations that were not refreshed recently, but
+        // those the game asked to keep (port_gx_keep_efb_copy).
         for (auto it = efbCopies.begin(); it != efbCopies.end();) {
-            if (frameNumber - it->second.frame > 8) {
+            if (frameNumber - it->second.frame > 8 && !isKeptCopy(it->first)) {
                 it = efbCopies.erase(it);
             } else {
                 ++it;
@@ -1102,6 +1113,8 @@ Recorder* sRecorder;
 
 }  // namespace
 
+bool isKeptEfbCopy(u32 addr) { return isKeptCopy(addr); }
+
 void useRecorderBackend() {
     if (!sRecorder) {
         sRecorder = new Recorder();
@@ -1116,6 +1129,27 @@ extern "C" void port_gx_use_recorder_backend(void) { gpu::useRecorderBackend(); 
 // Number the frame being recorded will carry (gpu::Renderer::frameNumber()
 // once it is shown).
 extern "C" uint64_t port_gx_recording_frame(void) { return gpu::sRecorder ? gpu::sRecorder->frameNumber : 0; }
+
+// Registered from the scene's loading thread while the game thread records:
+// a few lock-free slots.
+extern "C" void port_gx_keep_efb_copy(const void* dst) {
+    uint32_t addr = (uint32_t)(uintptr_t)dst & 0x1FFFFFE0u;
+    for (int i = 0; i < 8; i++) {
+        uint32_t expected = 0;
+        if (gpu::sKeptCopies[i].load() == addr || gpu::sKeptCopies[i].compare_exchange_strong(expected, addr)) {
+            return;
+        }
+    }
+    port_log("gx: no slot left to keep the EFB copy at %08x", addr);
+}
+
+// Called as a scene is destroyed, before the next one loads and registers
+// its own (GameSystemSceneController waits for the destruction to end).
+extern "C" void port_gx_release_kept_efb_copies(void) {
+    for (int i = 0; i < 8; i++) {
+        gpu::sKeptCopies[i].store(0);
+    }
+}
 
 // Frame boundary: VI flip of a new XFB.
 extern "C" void port_gx_recorder_end_frame(void) {

@@ -59,6 +59,14 @@ int port_sprintf(char* dst, const char* fmt, ...);
 // markers around HUD drawing and the main camera, both kept in order with
 // the GX commands issued before them.
 void port_gx_marker(unsigned int kind);
+// An EFB copy the game makes once and shows for minutes (the Comet
+// Observatory's map board), by its destination: the recorder keeps it, where
+// it forgets other copies a few frames after they were made, until the CPU
+// writes over that memory.  On PC a copy lives on the GPU only.
+void port_gx_keep_efb_copy(const void* dst);
+// Forgets every copy registered to keep: a scene ends (~GameScene), and its
+// memory goes back to the heap.  Those copies are then dropped as any other.
+void port_gx_release_kept_efb_copies(void);
 // Frame-time statistics (see port/port.h).
 void port_perf_frame_begin(void);
 void port_perf_frame_work_done(void);

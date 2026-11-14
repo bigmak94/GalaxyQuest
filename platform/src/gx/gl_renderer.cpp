@@ -368,6 +368,7 @@ struct Renderer::Impl {
     void doCopy(const Item& it, EfbTarget& src, Renderer& r, bool vr);
     CopyTex& copyTex(u64 key, int w, int h);
     void evictCopies();
+    std::unordered_map<u64, CopyTex>::iterator findCopy(u32 addr, bool kept);
     bool snapshotTaken = false;    // the last execute() filled eye->depthSnapshot
     int hudDraws = 0;              // draws the last execute() sent to the HUD target
     bool dumpingCopies = false;    // PETARI_COPYDUMP, this replay
@@ -763,13 +764,28 @@ CopyTex& Renderer::Impl::copyTex(u64 key, int w, int h) {
     return c;
 }
 
+// The copy texture a draw samples.  A copy the game asks to keep
+// (port_gx_keep_efb_copy, the Comet Observatory's map board) is made once,
+// as a scene loads, in a frame only the flat view may replay: the eyes take
+// that one.
+std::unordered_map<u64, CopyTex>::iterator Renderer::Impl::findCopy(u32 addr, bool kept) {
+    auto it = copies.find(copyKey(copySlot, addr));
+    for (u32 slot = 0; kept && slot < 3 && it == copies.end(); slot++) {
+        it = copies.find(copyKey(slot, addr));
+    }
+    return it;
+}
+
 // Copy targets of addresses (or views) no longer copied to: the recorder
 // forgets a copy after 8 frames, and a scene's buffers are copied to every
-// frame.
+// frame.  Copies the game asks to keep stay until it releases them, as the
+// console's memory would hold them: out of view the map board isn't drawn,
+// and after two seconds it came back black.
 void Renderer::Impl::evictCopies() {
     const u64 kKeepFrames = 120;
     for (auto it = copies.begin(); it != copies.end();) {
-        if (it->first != kXfbCopyKey && it->second.frame + kKeepFrames < cur->number) {
+        if (it->first != kXfbCopyKey && it->second.frame + kKeepFrames < cur->number &&
+            !isKeptEfbCopy((u32)it->first << 5)) {
             glDeleteTextures(1, &it->second.tex);
             glDeleteFramebuffers(1, &it->second.fbo);
             it = copies.erase(it);
@@ -1236,7 +1252,8 @@ void Builder::build(std::shared_ptr<const Frame> frame, Prepared& out) {
             c += 2;
             break;
         case CMD_TEX_EFB:
-            boundTex[c[0] & 7] = 0x80000000u | (c[4] >> 5);  // the copy's address
+            // The copy's address, and whether it is a kept copy (CMD_TEX_EFB).
+            boundTex[c[0] & 7] = 0x80000000u | ((c[0] & 0x100) ? 0x40000000u : 0u) | (c[4] >> 5);
             c += 5;
             break;
         case CMD_MARKER: {
@@ -2096,7 +2113,7 @@ void Renderer::Impl::execute(EfbTarget& efb, const EyeView* eye, EfbTarget* hud,
                 continue;
             }
             if (tr & 0x80000000u) {
-                auto cit = copies.find(copyKey(copySlot, (tr & 0x7FFFFFFF) << 5));
+                auto cit = findCopy((tr & 0x00FFFFFF) << 5, (tr & 0x40000000u) != 0);
                 bindTexture(u, cit != copies.end() ? cit->second.tex : 0, sampler(it.texMode0[u], it.texMode1[u], 1));
             } else if (tr < textures.size()) {
                 bindTexture(u, textures[tr]->glTex, sampler(it.texMode0[u], it.texMode1[u], textures[tr]->levels));
