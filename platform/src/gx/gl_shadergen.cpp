@@ -156,6 +156,21 @@ std::string genVertexShader(const ShaderUid& u) {
     o.w("  v_gxz = c.w != 0.0 ? depth / c.w : depth;\n");
     o.w("  bool vrDraw = (recs[rb + %uu] & 1u) != 0u && vrFlags.x == 1;\n", (unsigned)kRecFlags);
     o.w("  bool stereoDraw = (recs[rb + %uu] & 1u) != 0u && vrFlags.x == 2;\n", (unsigned)kRecFlags);
+    if (((u.fogSel >> 1) & 7) >= 2) {
+        // Fog goes by the game camera's depth, and the diorama also shows
+        // what lies beside and behind that camera, which the console never
+        // draws: there the depth passes through infinity at the camera's
+        // plane and reads as the far plane behind it, so the ground round
+        // the viewer came out in the full fog colour (a black band when
+        // looking to the side, up or down).  Outside the 45 degree cone the
+        // game camera sees, the fog goes by the distance from that camera.
+        o.w("  if (vrDraw) {\n");
+        o.w("    vec4 f4 = vec4(pos.xy, -max(abs(pos.z), 0.7071 * length(pos)), 1.0);\n");
+        o.w("    float fz = dot(proj[2], f4), fw = dot(proj[3], f4);\n");
+        o.w("    float fd = (fz * depthParams.x + fw * depthParams.y) * (1.0 / 16777215.0);\n");
+        o.w("    v_gxz = fw != 0.0 ? fd / fw : fd;\n");
+        o.w("  }\n");
+    }
     o.w("  vec4 clipPos;\n");
     o.w("  if (vrDraw && (recs[rb + %uu] & 2u) != 0u) {\n", (unsigned)kRecFlags);
     // A sky is modelled around the game camera, which is metres away from
