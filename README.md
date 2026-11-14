@@ -367,9 +367,8 @@ python tools/saves.py restore GalaxyQuest-saves-<date>.tar
 ```
 
 Restoring closes the app and replaces its saves on that headset (it backs
-up the ones it replaces first, next to the file). A save belongs to the
-disc it was made with: one from the European disc shows up when you play
-the European disc, one from the American disc the American one.
+up the ones it replaces first, next to the file). The app keeps its saves
+in the same place whichever disc you converted, European or American.
 
 ## Controls
 

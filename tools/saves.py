@@ -12,9 +12,9 @@ reinstall.  Restoring replaces the headset's saves: the app is closed first,
 and the saves it had are backed up next to the file restored from.
 
 The headset must be connected over USB with developer mode on, and adb
-(Android platform-tools) on PATH or in ADB.  Saves belong to the disc they
-were made with: one from the European disc shows up on the European disc
-only, one from the American disc on the American one.
+(Android platform-tools) on PATH or in ADB.  The app keeps its saves in one
+place whichever disc was converted (European or American): a backup holds
+the same three files either way.
 """
 import io
 import os
@@ -70,23 +70,6 @@ def save_files(data):
     return files
 
 
-REGIONS = {'P': 'European', 'E': 'American', 'J': 'Japanese', 'K': 'Korean'}
-
-
-def discs(files):
-    """The discs whose saves they are (each has a folder named after its game ID in hex)."""
-    names = []
-    for n in sorted(files):
-        if n.endswith('/GameData.bin'):
-            folder = n.split('/')[-3]
-            try:
-                game = bytes.fromhex(folder).decode('ascii')
-            except ValueError:
-                game = folder
-            names.append('the %s disc' % REGIONS[game[3]] if len(game) == 4 and game[3] in REGIONS else folder)
-    return ', '.join(names)
-
-
 def read_saves(command):
     """The headset's saves as tar data, or None when it has none yet."""
     listing = subprocess.run(command + ['shell', 'run-as', PACKAGE, 'ls', SAVES], stdin=subprocess.DEVNULL,
@@ -105,7 +88,7 @@ def backup(command, path):
     files = save_files(data)
     with open(path, 'wb') as f:
         f.write(data)
-    print('saved %s (%d bytes; saves of %s)' % (path, len(data), discs(files)))
+    print('saved %s (%d bytes, %d files)' % (path, len(data), len(files)))
 
 
 def restore(command, path):
@@ -120,7 +103,7 @@ def restore(command, path):
         with open(keep, 'wb') as f:
             f.write(current)
         print('the headset\'s saves until now: %s' % keep)
-    # Over the saves there: those of another disc stay.
+    # Over the saves there.
     run(command, 'push', path, TMP)
     run(command, 'shell', 'run-as', PACKAGE, 'tar', 'xof', TMP)
     run(command, 'shell', 'rm', '-f', TMP)
@@ -128,7 +111,7 @@ def restore(command, path):
     there = save_files(back) if back is not None else {}
     if any(there.get(name) != content for name, content in files.items()):
         sys.exit('the saves did not arrive whole: try again')
-    print('restored %s (saves of %s)' % (path, discs(files)))
+    print('restored %s (%d files)' % (path, len(files)))
 
 
 def main():
