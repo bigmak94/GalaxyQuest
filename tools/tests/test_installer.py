@@ -128,7 +128,30 @@ class InstallerTests(unittest.TestCase):
     def test_extraction_failure_never_converts_installs_or_copies(self):
         self.exercise_install(fail=False, is_image=True, extraction_fails=True)
 
-    def exercise_install(self, fail, is_image=False, extraction_fails=False):
+    def test_known_headsets_are_recognized(self):
+        for identity in (('Oculus', 'oculus', 'Quest 3'), ('Meta', 'meta', 'Quest 3S'),
+                         ('Play For Dream', 'YVR', 'PFDM MR'), ('play-for_dream', '', ''), ('', 'yvr', ''),
+                         ('', '', 'PFDM MR')):
+            self.assertTrue(install.is_known_headset(*identity), identity)
+        for identity in (('samsung', 'samsung', 'SM-S918B'), ('Google', 'google', 'Pixel 8'), ('', '', '')):
+            self.assertFalse(install.is_known_headset(*identity), identity)
+
+    def test_play_for_dream_headset_installs_without_asking(self):
+        def never(question):
+            self.fail('a known headset must not be asked about')
+        self.exercise_install(fail=False, identity=('Play For Dream', 'YVR', 'PFDM MR'), confirm=never)
+
+    def test_unknown_device_is_refused_unless_confirmed(self):
+        phone = ('samsung', 'samsung', 'SM-S918B')
+        self.exercise_install(fail=False, identity=phone, refused=True)
+        asked = []
+        self.exercise_install(fail=False, identity=phone, refused=True,
+                              confirm=lambda question: asked.append(question) and False)
+        self.assertIn('SM-S918B', asked[0])
+        self.exercise_install(fail=False, identity=phone, confirm=lambda question: True)
+
+    def exercise_install(self, fail, is_image=False, extraction_fails=False,
+                         identity=('Oculus', 'oculus', 'Quest 3'), confirm=None, refused=False):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             original = root / 'original'
@@ -162,9 +185,11 @@ class InstallerTests(unittest.TestCase):
             def command(adb, *args, **kwargs):
                 self.assertEqual(kwargs['serial'], 'quest')
                 if args == ('shell', 'getprop ro.product.manufacturer'):
-                    return 'Oculus'
+                    return identity[0]
+                if args == ('shell', 'getprop ro.product.brand'):
+                    return identity[1]
                 if args == ('shell', 'getprop ro.product.model'):
-                    return 'Quest 3'
+                    return identity[2]
                 self.assertEqual(args[:3], ('install', '--no-incremental', '-r'))
                 calls.append('install')
                 return 'Success'
@@ -189,7 +214,12 @@ class InstallerTests(unittest.TestCase):
                 stack.enter_context(mock.patch.object(push_data, 'copy_data', side_effect=copy))
                 stack.enter_context(mock.patch.object(install.shutil, 'disk_usage', return_value=disk))
                 stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
-                if extraction_fails:
+                if refused:
+                    with self.assertRaisesRegex(install.InstallError, 'not a known headset'):
+                        install.install_game(str(game), 'quest', True,
+                                             lambda *event: progress.append(event), confirm=confirm)
+                    self.assertEqual(calls, [])
+                elif extraction_fails:
                     with self.assertRaisesRegex(install.InstallError, 'Extraction failed'):
                         install.install_game(str(game), 'quest', True,
                                              lambda *event: progress.append(event))
@@ -201,11 +231,13 @@ class InstallerTests(unittest.TestCase):
                     self.assertEqual(calls, ['convert'])
                 else:
                     install.install_game(str(game), 'quest', True,
-                                         lambda *event: progress.append(event))
+                                         lambda *event: progress.append(event), confirm=confirm)
                     self.assertEqual(calls, (['extract'] if is_image else []) + ['convert', 'install', 'copy'])
                     self.assertEqual(progress[-1][1], 100)
             self.assertEqual(sentinel.read_bytes(), b'original game')
-            self.assertEqual(list((root / 'work').iterdir()), [])
+            if not refused:  # a refused device stops before any workspace is made
+                self.assertEqual(list((root / 'work').iterdir()), [])
+            self.assertFalse(refused and (root / 'work').exists())
 
     def test_copy_pins_all_commands_and_tar_holds_game_root(self):
         with tempfile.TemporaryDirectory() as tmp:
