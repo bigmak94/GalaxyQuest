@@ -50,8 +50,9 @@ always stands upright, even when running round a tiny planet. You look
 around with your own head, and the right stick turns the view in 45 degree
 steps. When a wall comes between you and Mario, the part in the way fades
 out. Galaxy intros, launch star flights and a few special views play on a
-big virtual screen, and the pause menu and the HUD float on a panel in front
-of you.
+big virtual screen (in 3D, and with your room around it, if you switch
+*Stereoscopic 3D* and *Passthrough* on), and the pause menu and the HUD
+float on a panel in front of you.
 
 **The giant screen.** The game starts on a giant 16:9 screen, from the
 game's own camera, as it did on a TV; switch *Giant screen* off in the VR

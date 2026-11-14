@@ -136,19 +136,22 @@ has no effect as things are (the 3D depth while the 3D is off) is dimmed.
   controllers stay lined up with what you see, and their tilt (the Star
   Ball, Ray surfing) is read from the tilted view, so it works lying back
   too. It stays as you set it when you recentre the view.
-- **Passthrough** (off by default) shows your own room around the giant
-  screen, through the headset's cameras, instead of the dark. It fades in
-  and out as you switch it. It only shows on the giant screen: the diorama
-  fills the whole view with the game's world. The headset draws the room on
-  every refresh, which takes some of the GPU's time.
-- **Stereoscopic 3D** (off by default) shows the giant screen's picture in
+- **Passthrough** (off by default) shows your own room around the screen,
+  through the headset's cameras, instead of the dark. It fades in and out
+  as you switch it. With the giant screen off it shows round the screen the
+  diorama gives way to (launch star flights, galaxy intros, cutscenes,
+  menus); the diorama itself fills the whole view with the game's world.
+  The headset draws the room on every refresh, which takes some of the
+  GPU's time.
+- **Stereoscopic 3D** (off by default) shows the screen's picture in
   3D: the game is drawn once for each eye, from its own camera moved a
   little to either side. The sky and distant scenery lie far behind the
   screen, Mario stands a little in front of it and the ground before him
   comes out towards you. The HUD, the text and the menus float in front of
   the scene; the pointer's star cursor lies on whatever it points at in the
-  scene (and with the menus while you point at those). The switch does
-  nothing while the giant screen is off (the diorama is 3D anyway).
+  scene (and with the menus while you point at those). With the giant
+  screen off, it applies to the screen the diorama gives way to: a launch
+  star's flight or a cutscene then plays in 3D instead of flat.
 - **3D depth** (1.75 by default, 0.25 to 3) is how deep that 3D is. Around
   0.5 the whole scene stays behind the screen, like a window, and the
   effect is slight: a screen 4.5 m away leaves little room for depth behind
@@ -326,14 +329,16 @@ screen_distance = 4.5
 # straight ahead instead of down, reclined or lying down.
 screen_tilt = 0
 diorama_tilt = 0
-# 1 shows your room around the giant screen (the headset's passthrough)
-# instead of the dark; 0 is the default
+# 1 shows your room around the screen (the headset's passthrough) instead
+# of the dark: the giant screen, or the screen the diorama gives way to for
+# flights and cutscenes; 0 is the default
 passthrough = 0
-# The giant screen in stereoscopic 3D (1; 0, the default, shows both eyes
-# the same picture). stereo_depth is how deep it looks (0.25 to 3, "3D
-# depth" on the VR settings panel): how far in front of the farthest things
-# Mario is drawn, in distances between your eyes; about 0.5 keeps everything
-# behind the screen, more brings the world out of it. stereo_far is how far
+# The screen in stereoscopic 3D (1; 0, the default, shows both eyes the
+# same picture): the giant screen, or the diorama's flights and cutscenes.
+# stereo_depth is how deep it looks (0.25 to 3, "3D depth" on the VR
+# settings panel): how far in front of the farthest things Mario is drawn,
+# in distances between your eyes; about 0.5 keeps everything behind the
+# screen, more brings the world out of it. stereo_far is how far
 # apart the farthest things are drawn, in distances between your eyes (0.5
 # to 1): at 1 they look infinitely far away, and it cannot be more.
 # stereo_resolution is the size of each of the two pictures relative to the

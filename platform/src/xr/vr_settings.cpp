@@ -79,8 +79,8 @@ bool setting(const char* key) {
     return s && s->get() != 0.0f;
 }
 bool giantOn() { return setting("giant_screen"); }
-bool stereoOn() { return giantOn() && setting("stereo_screen"); }
-bool passthroughUsable() { return giantOn() && vr::passthroughAvailable(); }
+bool stereoOn() { return setting("stereo_screen"); }
+bool passthroughUsable() { return vr::passthroughAvailable(); }
 bool sharpenOn() { return setting("sharpening"); }
 bool severalLanguages() { return port_language_count() > 1; }
 
@@ -89,10 +89,13 @@ void hintPassthrough(char* out, size_t size) {
     if (!vr::passthroughAvailable()) {
         snprintf(out, size, "Not available on this headset");
     } else {
-        hintScreenOnly(out, size, "Your room around the screen");
+        snprintf(out, size, "%s", giantOn() ? "Your room around the screen" : "Round the screen of flights and cutscenes");
     }
 }
-void hintStereo(char* out, size_t size) { hintScreenOnly(out, size, "A picture for each eye"); }
+// Off the giant screen, the screen is the one the diorama gives way to.
+void hintStereo(char* out, size_t size) {
+    snprintf(out, size, "%s", giantOn() ? "A picture for each eye" : "On the screen of flights and cutscenes");
+}
 void hintDiorama(char* out, size_t size) { snprintf(out, size, "%s", giantOn() ? "Used while the giant screen is off" : "How far away Mario stands"); }
 void hintScreenTilt(char* out, size_t size) { hintScreenOnly(out, size, "Lift it all to look up or lie back"); }
 void hintDioramaTilt(char* out, size_t size) {
@@ -167,7 +170,7 @@ const Item kScreenItems[] = {
     {"screen_distance", "Screen distance", "How far away the giant screen is", kSlider, 2.5f, 10.0f, 0.5f, "%.1f m", giantOn},
     {"screen_tilt", "View tilt", nullptr, kStepper, -20.0f, 90.0f, 5.0f, nullptr, giantOn, hintScreenTilt, nullptr, tiltText},
     {"passthrough", "Passthrough", nullptr, kSwitch, 0, 0, 0, nullptr, passthroughUsable, hintPassthrough},
-    {"stereo_screen", "Stereoscopic 3D", nullptr, kSwitch, 0, 0, 0, nullptr, giantOn, hintStereo},
+    {"stereo_screen", "Stereoscopic 3D", nullptr, kSwitch, 0, 0, 0, nullptr, nullptr, hintStereo},
     {"stereo_depth", "3D depth", "More brings the world out of the screen", kStepper, 0.25f, 3.0f, 0.25f, "%.2f", stereoOn},
     {"stereo_far", "3D far depth", "How far behind the screen the sky is", kStepper, 0.5f, 1.0f, 0.05f, "%.2f", stereoOn},
     {"stereo_resolution", "3D resolution", "Size of each eye's picture", kStepper, 0.5f, 1.0f, 0.05f, "%.2f", stereoOn},

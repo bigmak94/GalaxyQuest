@@ -658,8 +658,10 @@ void drawLaser(const vr::EyeInfo& eye, const xm::Mat4& viewProj) {
     if (!sAimValid || overlayBrightness() <= 0.0f) return;
     // On the giant screen the game's own cursor shows where the controller
     // points, as on a TV: no beam from the controller to it.  The VR layer's
-    // own panels have no cursor, so the beam stays for those.
-    if (sGiantScreen && !sVrMode && !sAimOnPanel && !vr::setupActive()) return;
+    // own panels have no cursor, so the beam stays for those.  Nor on any
+    // screen in 3D, where the cursor lies in the scene's depth and a beam
+    // would end on the screen's plane.
+    if ((sGiantScreen || sStereoShown) && !sVrMode && !sAimOnPanel && !vr::setupActive()) return;
     xm::Vec3 p0 = sAimOrigin, p1 = sAimOrigin + sAimDir * sAimLength;
     xm::Vec3 toEye = xm::normalize(eye.position - (p0 + p1) * 0.5f);
     xm::Vec3 across = xm::normalize(xm::cross(sAimDir, toEye));
@@ -1076,7 +1078,7 @@ int refreshRates(float* rates, int max) {
 bool invertCamera() { return sInvertCamera; }
 float spinShakeSpeed() { return 2.5f * sSpinShakeStrength; }
 float viewTilt() { return sGiantScreen ? sScreenTilt : sDioramaTilt; }
-bool passthroughWanted() { return sPassthrough && sGiantScreen; }
+bool passthroughWanted() { return sPassthrough && !sShownVrMode; }
 float passthroughShown() { return sPassAmount; }
 bool passthroughAvailable() { return sPassAvailable; }
 void setPassthroughAvailable(bool available) { sPassAvailable = available; }
@@ -1595,9 +1597,11 @@ void beginFrame(const FrameInfo& frame) {
     updateSkipIndicator(dt);
     sVrMode = sShownVrMode && r.hasFrame() && r.camera().valid;
     sDioramaShown.store(sVrMode ? 1 : 0);
-    // The room around the giant screen (passthrough) fades in and out with
-    // the setting; the diorama fills the view itself.
-    float room = sPassthrough && sPassAvailable && sGiantScreen && !sShownVrMode ? 1.0f : 0.0f;
+    // The room around the screen (passthrough) fades in and out with the
+    // setting: round the giant screen, and round the screen the diorama
+    // gives way to (flights, cutscenes, menus).  The diorama fills the view
+    // itself.
+    float room = sPassthrough && sPassAvailable && !sShownVrMode ? 1.0f : 0.0f;
     sPassAmount = room > sPassAmount ? fminf(room, sPassAmount + dt / 0.3f) : fmaxf(room, sPassAmount - dt / 0.3f);
     if (sVrMode) {
         bool wasValid = sRig.valid;
@@ -1629,9 +1633,11 @@ void beginFrame(const FrameInfo& frame) {
     // picture on the screen.
     bool screen3d = !sVrMode && r.hasFrame() && r.camera().valid;
     updateScale(frame, sVrMode ? kEyeScale : screen3d ? kScreenScale : kNoScale);
-    // The giant screen's gameplay (any frame of it with a 3D camera) as a
-    // stereo pair; the screen's 3D pictures at the screen's render scale.
-    sStereoFrame = sStereoScreen && sGiantScreen && screen3d;
+    // The screen's gameplay (any frame of it with a 3D camera) as a stereo
+    // pair, on the giant screen and on the screen the diorama gives way to
+    // (a launch star's flight, a cutscene); the screen's 3D pictures at the
+    // screen's render scale.
+    sStereoFrame = sStereoScreen && screen3d;
     float picture = (sStereoFrame ? sStereoSize : 1.0f) * (screen3d ? sScreenScale : 1.0f);
     int pictureW = (int)lroundf(sFlat.width * picture), pictureH = (int)lroundf(sFlat.height * picture);
     sScaledFrame = screen3d && !sStereoFrame && pictureW < sFlat.width;
