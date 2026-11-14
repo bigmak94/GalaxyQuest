@@ -218,6 +218,13 @@ has no effect as things are (the 3D depth while the 3D is off) is dimmed.
   screen 4.5 m away. The row then shows the picture's size instead.
 - **Highest resolution** (1.60 by default) is as far as it may raise it
   while the GPU has time to spare. Lower it to save battery.
+- **Wider view** (off by default, up to +20% in steps of 5) draws the
+  diorama a little wider than the display shows. The headset turns each
+  picture to where your head is by the time it is shown, and the game makes
+  60 pictures a second: when you turn your head quickly, the picture's edge
+  comes into view as a black band on the side you turn to. With a wider
+  view there is picture there instead. It costs as much resolution as it
+  adds view (the same pixels cover more).
 - **Refresh rate**: the display's, among those the headset offers. At
   120 Hz (the default) the game's 60 frames a second fit the display
   exactly; other rates make moving things judder, and SpaceWarp only works
@@ -299,6 +306,11 @@ language = english
 # GPU has time to spare and drops (down to min_resolution) as soon as
 # frames are missed. Lower it to save battery.
 resolution = 1.6
+# How much wider than the display the diorama is drawn (0 to 0.3; "Wider
+# view" on the VR settings panel): 0.1 gives a tenth more picture past
+# every edge, so a quick turn of the head shows picture there instead of a
+# black band, for a tenth less resolution. 0 is the default.
+view_margin = 0
 # The lowest render resolution (0.5 to 1.25; also on the VR settings panel).
 # The giant screen's picture goes down to three quarters of it (0.6 of its
 # full 2048x1152) while the GPU cannot keep up.

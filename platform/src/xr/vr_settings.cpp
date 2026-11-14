@@ -157,6 +157,14 @@ void skipText(float value, char* out, size_t size) {
 
 void spinStrengthText(float value, char* out, size_t size) { snprintf(out, size, "%.0f%%", value * 100.0f); }
 
+void marginText(float value, char* out, size_t size) {
+    if (value < 0.005f) {
+        snprintf(out, size, "Off");
+    } else {
+        snprintf(out, size, "+%.0f%%", value * 100.0f);
+    }
+}
+
 void tiltText(float value, char* out, size_t size) {
     if (fabsf(value) < 0.5f) {
         snprintf(out, size, "Off");
@@ -193,6 +201,8 @@ const Item kPictureItems[] = {
     {"sharpening_strength", "CAS strength", "From 0 (least) to 1 (most)", kStepper, 0.0f, 1.0f, 0.1f, "%.1f", sharpenOn},
     {"min_resolution", "Lowest resolution", nullptr, kStepper, 0.5f, 1.25f, 0.05f, "%.2f", nullptr, hintScale},
     {"resolution", "Highest resolution", "Used while the GPU has time to spare", kStepper, 0.5f, 2.0f, 0.05f, "%.2f"},
+    {"view_margin", "Wider view", "Diorama: no black edge on head turns", kStepper, 0.0f, 0.2f, 0.05f, nullptr, nullptr, nullptr, nullptr,
+     marginText},
     {"refresh_rate", "Refresh rate", "120 fits the game's 60 frames a second", kStepper, 0, 0, 0, "%.0f Hz", nullptr, nullptr, refreshOptions},
     {"high_clocks", "High clocks", "Faster CPU and GPU; from the next start", kSwitch},
 };

@@ -1226,6 +1226,17 @@ void locateViews(App& a, XrTime time, XrView views[2]) {
     XrViewState vs{XR_TYPE_VIEW_STATE};
     uint32_t n = 0;
     XR_CHECK(xrLocateViews(a.session, &li, &vs, 2, &n, views));
+    // The view margin: wider fields of view, from which the projection, the
+    // game's culling and the field of view given to the compositor follow.
+    float margin = vr::viewMargin();
+    if (margin > 0.0f) {
+        for (int e = 0; e < 2; e++) {
+            XrFovf& f = views[e].fov;
+            for (float* angle : {&f.angleLeft, &f.angleRight, &f.angleUp, &f.angleDown}) {
+                *angle = atanf(tanf(*angle) * (1.0f + margin));
+            }
+        }
+    }
 }
 
 vr::EyeInfo eyeInfo(const App& a, const XrView& v, int e) {

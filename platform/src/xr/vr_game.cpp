@@ -419,6 +419,7 @@ bool sSuperRes = true;        // Meta Quest Super Resolution (eye at render size
 bool sSharpen = false;        // AMD FidelityFX CAS in the composite
 float sSharpness = 0.5f;      // its strength, 0..1
 float sMinScale = 0.8f;       // lowest render scale (min_resolution)
+float sViewMargin = 0.0f;     // extra field of view drawn round each eye's in the diorama, as a share of it (view_margin)
 bool sGiantScreen = true;     // gameplay on the giant virtual screen (giant_screen; the default at first start)
 bool sStereoScreen = false;   // the giant screen's picture as a stereo pair (stereo_screen)
 float sStereoDepth = 1.75f;   // how far before the farthest things Mario is drawn, in eye distances (stereo_depth)
@@ -972,6 +973,7 @@ vr::Setting sSettings[] = {
     {"spin_shake_strength", 0.2f, 1.6f, 0.0f, NUMBER(sSpinShakeStrength)},
     {"resolution", 0.5f, 2.0f, 0.0f, NUMBER(sResolution)},
     {"min_resolution", 0.5f, 1.25f, 0.0f, NUMBER(sMinScale)},
+    {"view_margin", 0.0f, 0.3f, 0.0f, NUMBER(sViewMargin)},
     {"refresh_rate", 60.0f, 144.0f, 0.0f, NUMBER(sRefreshRate)},
     {"high_clocks", 0.0f, 1.0f, 0.0f, FLAG(sHighClocks)},
     {"space_warp", 0.0f, 1.0f, 0.0f, FLAG(sSpaceWarp)},
@@ -1084,6 +1086,9 @@ bool passthroughAvailable() { return sPassAvailable; }
 void setPassthroughAvailable(bool available) { sPassAvailable = available; }
 bool highClocks() { return sHighClocks; }
 bool spaceWarp() { return sSpaceWarp; }
+// Only the diorama fills the eyes' images: a screen is a layer of its own,
+// which the headset places afresh on every refresh.
+float viewMargin() { return sShownVrMode ? sViewMargin : 0.0f; }
 bool superResolution() { return sSuperRes; }
 bool snapTurn(int dir) {
     if (!sVrMode || !sRig.valid || sRigParams.turnWithCamera || dir == 0) return false;

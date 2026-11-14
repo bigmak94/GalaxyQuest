@@ -139,6 +139,13 @@ bool highClocks();
 bool invertCamera();
 // Controller speed needed for a spin gesture, m/s (spin_shake_strength).
 float spinShakeSpeed();
+// How much wider than the display's the eyes' fields of view are drawn, as
+// a share of their tangents (view_margin; 0 while a screen is shown).  The
+// headset turns each picture to where the head is by the time it is shown,
+// and at the game's 60 frames a second a quick turn of the head brings the
+// picture's edge into view (a black band on the side turned to): the margin
+// gives it picture there, at the cost of that much resolution.
+float viewMargin();
 // The view tilt for the way the game is shown now, degrees up
 // (screen_tilt on the giant screen, diorama_tilt otherwise).
 float viewTilt();
