@@ -294,5 +294,14 @@ void FurDrawer::createFurMap() {
         }
     }
 
+#ifdef TARGET_PC
+    // IA8 texels are big-endian (alpha first) wherever the GPU reads them; the
+    // native stores above put the intensity first, which made every texel
+    // without a hair opaque and each layer a solid copy of the body.
+    for (u32 i = 0; i < count; i++) {
+        pPixels[i] = __builtin_bswap16(pPixels[i]);
+    }
+#endif
+
     DCStoreRange(pPixels, count * sizeof(u16));
 }

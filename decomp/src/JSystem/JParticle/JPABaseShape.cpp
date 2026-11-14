@@ -456,6 +456,9 @@ void JPADrawBillboard(JPAEmitterWorkData* work, JPABaseParticle* param_1) {
         local_38[1][0] = 0.0f;
         local_38[0][2] = 0.0f;
         local_38[0][1] = 0.0f;
+#ifdef TARGET_PC
+        port_vr_billboard(&work->mPosCamMtx[0][0], &local_38[0][0]);  // facing the eye in VR
+#endif
         GXLoadPosMtxImm(local_38, 0);
         p_prj[work->mPrjType](work, local_38);
         GXCallDisplayList(jpa_dl, sizeof(jpa_dl));
@@ -484,6 +487,9 @@ void JPADrawRotBillboard(JPAEmitterWorkData* work, JPABaseParticle* param_1) {
         local_38[2][0] = 0.0f;
         local_38[1][2] = 0.0f;
         local_38[0][2] = 0.0f;
+#ifdef TARGET_PC
+        port_vr_billboard(&work->mPosCamMtx[0][0], &local_38[0][0]);
+#endif
         GXLoadPosMtxImm(local_38, 0);
         p_prj[work->mPrjType](work, local_38);
         GXCallDisplayList(jpa_dl, sizeof(jpa_dl));

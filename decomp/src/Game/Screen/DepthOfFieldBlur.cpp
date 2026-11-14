@@ -44,6 +44,14 @@ void DepthOfFieldBlur::draw() const {
     if (!isSomething()) {
         return;
     }
+#ifdef TARGET_PC
+    // In the VR diorama the depth this reads is the eye's (its own near and
+    // far planes), so most of the view came out blurred, and differently in
+    // each eye; a blur by screen depth means nothing in 3D anyway.
+    if (port_vr_diorama()) {
+        return;
+    }
+#endif
 
     CopyFilterNegater negator;
     ImageEffectLocalUtil::capture(_18, 4, 0, GX_TF_RGB565, false, 0);

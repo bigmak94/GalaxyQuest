@@ -329,8 +329,18 @@ static u8 GX2HWFiltConv[6] = {
 
 void J3DGDSetTexLookupMode(GXTexMapID id, GXTexWrapMode wrap_s, GXTexWrapMode wrap_t, GXTexFilter min_filt, GXTexFilter mag_filt, f32 min_lod,
                            f32 max_lod, f32 lod_bias, u8 bias_clamp, u8 do_edge_lod, GXAnisotropy max_aniso) {
+#ifdef TARGET_PC
+    // A negative bias through a signed byte, as GXInitTexObjLOD and
+    // GDSetTexLookupMode do: converting the negative float straight to u8
+    // is undefined, and on arm64 the sign bits overran the register number,
+    // so the write missed TX_SETMODE0 and the texture kept the previous
+    // draw's wrap and filter (Honeyhive's grass clamped once Mario moved).
+    J3DGDWriteBPCmd(BP_TEX_MODE0(wrap_s, wrap_t, mag_filt == TRUE, GX2HWFiltConv[min_filt], !do_edge_lod, (u8)(s8)(32.0f * lod_bias), max_aniso,
+                                 bias_clamp, J3DGDTexMode0Ids[id]));
+#else
     J3DGDWriteBPCmd(BP_TEX_MODE0(wrap_s, wrap_t, mag_filt == TRUE, GX2HWFiltConv[min_filt], !do_edge_lod, (u8)(32.0f * lod_bias), max_aniso,
                                  bias_clamp, J3DGDTexMode0Ids[id]));
+#endif
     J3DGDWriteBPCmd(BP_TEX_MODE1((u8)(16.0f * min_lod), (u8)(16.0f * max_lod), J3DGDTexMode1Ids[id]));
 }
 

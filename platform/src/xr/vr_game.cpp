@@ -776,6 +776,8 @@ bool rayPanel(xm::Vec3 o, xm::Vec3 d, xm::Vec3 center, float width, float aspect
 std::mutex sCullLock;
 bool sCullValid = false;
 float sCullMtx[12], sCullTanX = 1.0f, sCullTanY = 1.0f;
+float sMainView[12];          // the game's main camera this frame (port_vr_main_view)
+bool sMainViewValid = false;
 xm::Vec3 sMoveRight{1, 0, 0}, sMoveUp{0, 1, 0}, sMoveForward{0, 0, -1};
 
 void publishCullView(const vr::FrameInfo& frame) {
@@ -875,6 +877,52 @@ extern "C" int port_vr_cull_view(float* cameraMtx, float* tanHalfX, float* tanHa
     memcpy(cameraMtx, sCullMtx, sizeof(sCullMtx));
     *tanHalfX = sCullTanX;
     *tanHalfY = sCullTanY;
+    return 1;
+}
+
+extern "C" void port_vr_main_view(const float* viewMtx) {
+    std::lock_guard<std::mutex> lock(sCullLock);
+    memcpy(sMainView, viewMtx, sizeof(sMainView));
+    sMainViewValid = true;
+}
+
+extern "C" int port_vr_billboard_rot(const float* viewMtx, const float* mtx, float* rot) {
+    float h[12];
+    {
+        std::lock_guard<std::mutex> lock(sCullLock);
+        if (!sCullValid || !sMainViewValid) return 0;
+        // Only what the main camera draws stands in the diorama: the HUD's
+        // particles (an identity view), its 3D models and the mirror's
+        // camera keep facing their own camera.
+        for (int i = 0; i < 12; i++) {
+            if (fabsf(viewMtx[i] - sMainView[i]) > ((i & 3) == 3 ? 0.5f : 1e-4f)) return 0;
+        }
+        memcpy(h, sCullMtx, sizeof(h));
+    }
+    // The eye and the headset's right axis in the game camera's view space
+    // (the rows of its rotation, without any scale, and its translation).
+    xm::Vec3 rows[3];
+    for (int r = 0; r < 3; r++) rows[r] = xm::normalize({viewMtx[r * 4], viewMtx[r * 4 + 1], viewMtx[r * 4 + 2]});
+    xm::Vec3 eyeW{h[3], h[7], h[11]}, rightW{-h[0], -h[4], -h[8]};
+    xm::Vec3 eye{xm::dot(rows[0], eyeW) + viewMtx[3], xm::dot(rows[1], eyeW) + viewMtx[7], xm::dot(rows[2], eyeW) + viewMtx[11]};
+    xm::Vec3 headRight{xm::dot(rows[0], rightW), xm::dot(rows[1], rightW), xm::dot(rows[2], rightW)};
+    // Facing the eye from where the billboard stands (so turning the head
+    // alone moves nothing), upright as it was to the game camera (its view
+    // space's up), so the head's tilt does not roll it either.
+    xm::Vec3 back = xm::Vec3{eye.x - mtx[3], eye.y - mtx[7], eye.z - mtx[11]};
+    if (xm::length(back) < 1e-3f) return 0;
+    back = xm::normalize(back);
+    xm::Vec3 right = xm::cross(xm::Vec3{0.0f, 1.0f, 0.0f}, back);
+    if (xm::length(right) < 1e-3f) right = headRight - back * xm::dot(headRight, back);  // seen from straight above or below
+    if (xm::length(right) < 1e-3f) return 0;
+    right = xm::normalize(right);
+    xm::Vec3 up = xm::cross(back, right);
+    const xm::Vec3 cols[3] = {right, up, back};
+    for (int c = 0; c < 3; c++) {
+        rot[0 * 3 + c] = cols[c].x;
+        rot[1 * 3 + c] = cols[c].y;
+        rot[2 * 3 + c] = cols[c].z;
+    }
     return 1;
 }
 

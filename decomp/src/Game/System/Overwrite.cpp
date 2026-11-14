@@ -629,6 +629,9 @@ void JPADrawDBillboard(JPAEmitterWorkData* pWork, JPABaseParticle* pParticle) {
     matrix[2][2] = 1.0f;
     matrix[2][3] = position.z;
     matrix[0][2] = matrix[1][2] = matrix[2][0] = matrix[2][1] = 0.0f;
+#ifdef TARGET_PC
+    port_vr_billboard(&pWork->mPosCamMtx[0][0], &matrix[0][0]);  // facing the eye in VR
+#endif
     GXLoadPosMtxImm(matrix, GX_PNMTX0);
     p_prj[pWork->mPrjType](pWork, matrix);
     GXCallDisplayList(jpa_dl, 32);
@@ -1010,6 +1013,9 @@ void JPADrawYBillboard(JPAEmitterWorkData* pWork, JPABaseParticle* pParticle) {
     matrix[2][2] = pWork->mYBBCamMtx[2][2];
     matrix[2][3] = position.z;
     matrix[0][1] = matrix[0][2] = matrix[1][0] = matrix[2][0] = 0.0f;
+#ifdef TARGET_PC
+    port_vr_billboard(&pWork->mPosCamMtx[0][0], &matrix[0][0]);  // facing the eye in VR
+#endif
     GXLoadPosMtxImm(matrix, GX_PNMTX0);
     p_prj[pWork->mPrjType](pWork, matrix);
     GXCallDisplayList(jpa_dl, 32);
@@ -1048,6 +1054,9 @@ void JPADrawRotYBillboard(JPAEmitterWorkData* pWork, JPABaseParticle* pParticle)
     matrix[2][1] = cosY * z;
     matrix[2][2] = y;
     matrix[2][3] = position.z;
+#ifdef TARGET_PC
+    port_vr_billboard(&pWork->mPosCamMtx[0][0], &matrix[0][0]);  // facing the eye in VR
+#endif
     GXLoadPosMtxImm(matrix, GX_PNMTX0);
     p_prj[pWork->mPrjType](pWork, matrix);
     GXCallDisplayList(jpa_dl, 32);

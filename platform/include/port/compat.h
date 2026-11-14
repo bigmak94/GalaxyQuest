@@ -93,6 +93,33 @@ void port_input_use_tilt(float neutralPitchDeg);
 // left, up and forward axes and the position) and the tangents of the half
 // field of view.  Returns 0 when not rendering in VR.
 int port_vr_cull_view(float* cameraMtx, float* tanHalfX, float* tanHalfY);
+// Billboards (particles and model joints that turn to face the camera) in
+// the VR diorama: the rotation (3x3, rows) that turns a billboard facing the
+// game camera, in its view space (`viewMtx`, world to view, 3x4 rows), to
+// face the eye instead, upright as the game camera had it.  `mtx` is the
+// billboard's matrix (3x4 rows): its position is where it turns from, so it
+// keeps still while the head only turns.  Returns 0 when not rendering in VR,
+// or when `viewMtx` is not the main camera's (port_vr_main_view): the HUD's
+// particles and models are not in the diorama.
+int port_vr_billboard_rot(const float* viewMtx, const float* mtx, float* rot);
+// The main 3D camera's view matrix (world to view, 3x4 rows) for the frame
+// about to be calculated and drawn.
+void port_vr_main_view(const float* viewMtx);
+// m's 3x3 part (rows `stride` floats apart) = rot * m's 3x3 part.
+static inline void port_mtx33_premul(const float* rot, float* m, int stride) {
+    for (int c = 0; c < 3; c++) {
+        float a = m[c], b = m[stride + c], d = m[2 * stride + c];
+        for (int r = 0; r < 3; r++) {
+            m[r * stride + c] = rot[r * 3] * a + rot[r * 3 + 1] * b + rot[r * 3 + 2] * d;
+        }
+    }
+}
+// A billboard's matrix (3x4 rows, in the game camera's view space) turned
+// to face the eye; unchanged when not rendering in VR.
+static inline void port_vr_billboard(const float* viewMtx, float* mtx) {
+    float rot[9];
+    if (port_vr_billboard_rot(viewMtx, mtx, rot)) port_mtx33_premul(rot, mtx, 4);
+}
 // The diorama's axes in game world space while it is shown: right, up
 // (gravity at the camera's focus) and forward (away from the player).
 // Mario's movement follows them instead of the game camera's screen axes,

@@ -463,7 +463,21 @@ void J3DShapeMtxBBoardConcatView::load() const {
     }
 
     J3DCalcBBoardMtx(mtx);
+#ifdef TARGET_PC
+    // Facing the eye in VR (the normals turn with it).
+    float rot[9];
+    bool vr = port_vr_billboard_rot(&j3dSys.getViewMtx()[0][0], &mtx[0][0], rot);
+    if (vr) {
+        Mtx turned;
+        PSMTXCopy(mtx, turned);
+        port_mtx33_premul(rot, &turned[0][0], 4);
+        J3DFifoLoadPosMtxImm(turned, 0);
+    } else {
+        J3DFifoLoadPosMtxImm(mtx, 0);
+    }
+#else
     J3DFifoLoadPosMtxImm(mtx, 0);
+#endif
 
     mtx[0][0] = 1.0f / mtx[0][0];
     mtx[1][1] = 1.0f / mtx[1][1];
@@ -471,6 +485,9 @@ void J3DShapeMtxBBoardConcatView::load() const {
     mtx[0][3] = 0.0f;
     mtx[1][3] = 0.0f;
     mtx[2][3] = 0.0f;
+#ifdef TARGET_PC
+    if (vr) port_mtx33_premul(rot, &mtx[0][0], 4);
+#endif
 
     if (!sNBTFlag) {
         J3DFifoLoadNrmMtxImm(mtx, 0);
@@ -493,6 +510,9 @@ void J3DShapeMtxYBBoardConcatView::load() const {
     }
 
     J3DCalcYBBoardMtx(mtx1);
+#ifdef TARGET_PC
+    port_vr_billboard(&j3dSys.getViewMtx()[0][0], &mtx1[0][0]);  // facing the eye in VR
+#endif
     J3DFifoLoadPosMtxImm(mtx1, 0);
 
     if (sCurrentScaleFlag[mUseMtxIndex] == 1) {

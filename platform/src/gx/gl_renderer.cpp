@@ -140,6 +140,7 @@ struct Item {
     GLenum prim;       // GL_TRIANGLES, GL_LINES or GL_POINTS
     u8 useVr, hud;
     u8 player;         // between the player markers (SpaceWarp stencil tag)
+    u8 sky;            // a 3D draw between the sky markers (VR: drawn round the eye, at the far plane)
     u32 flags;
     u32 firstWord;     // first vertex, as a word offset into the frame's vertex data
     u32 endWord;       // end of the last merged draw's vertices
@@ -1323,6 +1324,7 @@ void Builder::build(std::shared_ptr<const Frame> frame, Prepared& out) {
             it.flags = flags;
             it.hud = inHud;
             it.player = inPlayer;
+            it.sky = inSky;
             it.prim = glPrim;
             // Viewport (native EFB coordinates, top-left origin).
             float sx = bitsToFloat(xfRegs[0x1A]), sy = bitsToFloat(xfRegs[0x1B]);
@@ -2066,7 +2068,13 @@ void Renderer::Impl::execute(EfbTarget& efb, const EyeView* eye, EfbTarget* hud,
                 setBlend(false, 0, 0, 0, 0, 0, 0, 0.0f);
             }
         }
-        setDepth(it.depthTest, it.depthFunc, it.depthTest && it.depthWrite);
+        // A sky in VR writes no depth: its layers all stand at one depth
+        // just short of the far plane (the vertex shader), where the division
+        // by w rounds by about a step of the 24-bit depth, so a layer over
+        // another (Sweet Sweet Galaxy's clouds over its sea) failed the depth
+        // test a triangle or a row at a time and the layer below showed.
+        // Without depth they keep their draw order, behind the scenery.
+        setDepth(it.depthTest, it.depthFunc, it.depthTest && it.depthWrite && !(vrEye && it.sky));
         setCull(it.cull, it.cullFace);
         if (tagPlayer) {
             setStencil(!toHudTarget && it.depthTest && it.depthWrite, it.player ? 1 : 0);

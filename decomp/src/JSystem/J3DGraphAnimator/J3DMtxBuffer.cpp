@@ -1,6 +1,7 @@
 #include "JSystem/J3DGraphAnimator/J3DMtxBuffer.hpp"
 #include "JSystem/J3DGraphAnimator/J3DJoint.hpp"
 #include "JSystem/J3DGraphBase/J3DMaterial.hpp"
+#include "JSystem/J3DGraphBase/J3DSys.hpp"
 #include "JSystem/J3DGraphLoader/J3DModelLoader.hpp"
 #include "JSystem/JKernel/JKRHeap.hpp"
 
@@ -421,9 +422,20 @@ void J3DMtxBuffer::calcBBoardMtx() {
                 (*nrmMtx)[2][0] = 0.0f;
                 (*nrmMtx)[2][1] = 0.0f;
                 (*nrmMtx)[2][2] = 1.0f / drawMtx[2][2];
+#ifdef TARGET_PC
+                // Facing the eye in VR (the normals turn with it).
+                float rot[9];
+                if (port_vr_billboard_rot(&j3dSys.getViewMtx()[0][0], &drawMtx[0][0], rot)) {
+                    port_mtx33_premul(rot, &drawMtx[0][0], 4);
+                    port_mtx33_premul(rot, &(*nrmMtx)[0][0], 3);
+                }
+#endif
             } else if (mJointTree->getJointNodePointer(index)->getMtxType() == 2) {
                 MtxPtr drawMtx = *getDrawMtx(i);
                 J3DCalcYBBoardMtx(drawMtx);
+#ifdef TARGET_PC
+                port_vr_billboard(&j3dSys.getViewMtx()[0][0], &drawMtx[0][0]);
+#endif
                 Mtx33* nrmMtx = getNrmMtx(i);
                 J3DPSCalcInverseTranspose(drawMtx, *nrmMtx);
             }

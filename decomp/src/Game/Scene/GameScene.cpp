@@ -405,6 +405,10 @@ void GameScene::calcAnim() {
         CategoryList::execute(MR::CalcAnimType_AnimParticleIgnorePause);
     }
 
+#ifdef TARGET_PC
+    // Billboards are turned to the headset from here on (port_vr_billboard).
+    port_vr_main_view(&MR::getCameraViewMtx().mMtx[0][0]);
+#endif
     SceneFunction::executeCalcViewAndEntryList();
 }
 
