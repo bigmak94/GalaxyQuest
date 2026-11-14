@@ -582,18 +582,103 @@ namespace MR {
     }
 #endif
 
+#ifdef TARGET_PC
+    // In the VR diorama the player points with the controller's own ray, not
+    // through the game camera's screen: the cursor's screen position is only
+    // that ray's point nearest Mario seen from the game camera, kept on
+    // screen.  Unprojecting it put the pointer elsewhere on a plane the ray
+    // crosses at an angle, and anywhere once it was kept at the screen's
+    // edge: Tarantox's web, the sling pods and the cocoons pulled the wrong
+    // way.  These work from the ray itself, this frame's and the last one's.
+    static TVec3f sVrRayOrigin[2], sVrRayDir[2];
+    static bool sVrRayValid[2] = {false, false};
+
+    void updateVrPointerRay() {
+        sVrRayOrigin[1] = sVrRayOrigin[0];
+        sVrRayDir[1] = sVrRayDir[0];
+        sVrRayValid[1] = sVrRayValid[0];
+        f32 o[3], d[3];
+        sVrRayValid[0] = port_vr_pointer_ray(o, d) != 0;
+        if (sVrRayValid[0]) {
+            sVrRayOrigin[0].set(o[0], o[1], o[2]);
+            sVrRayDir[0].set(d[0], d[1], d[2]);
+        }
+    }
+
+    // Where a ray crosses a plane, from either side of it; false when it
+    // runs along the plane or away from it.
+    static bool crossPlaneVr(TVec3f* pPos, const TVec3f& rOrigin, const TVec3f& rDir, const TVec3f& rPlaneBasePos, const TVec3f& rPlaneNorm) {
+        f32 along = rDir.dot(rPlaneNorm);
+        if (-0.001f < along && along < 0.001f) {
+            return false;
+        }
+        TVec3f offset = rPlaneBasePos - rOrigin;
+        f32 t = rPlaneNorm.dot(offset) / along;
+        if (t <= 0.0f) {
+            return false;
+        }
+        pPos->set(rOrigin);
+        pPos->add(rDir * t);
+        return true;
+    }
+
+    // The ray's point at a position's depth as the controller sees it (on
+    // the plane through the position that faces the controller), as the
+    // console took the cursor's point at the position's depth from the
+    // camera.  Aimed far to the side or away, the ray never gets there: the
+    // angle is capped at 78 degrees.
+    static void pointAtDepthVr(TVec3f* pPos, const TVec3f& rOrigin, const TVec3f& rDir, const TVec3f& rPos) {
+        TVec3f to = rPos - rOrigin;
+        f32 dist = to.length();
+        f32 along = dist > 0.0f ? to.dot(rDir) / dist : 1.0f;
+        if (along < 0.2f) {
+            along = 0.2f;
+        }
+        pPos->set(rOrigin);
+        pPos->add(rDir * (dist / along));
+    }
+#endif
+
     void calcStarPointerWorldPointingPos(TVec3f* pPos, const TVec3f& rPos, s32 channel) {
+#ifdef TARGET_PC
+        if (channel == WPAD_CHAN0 && sVrRayValid[0]) {
+            pointAtDepthVr(pPos, sVrRayOrigin[0], sVrRayDir[0], rPos);
+            return;
+        }
+#endif
         f32 camZ = MR::calcCameraDistanceZ(rPos);
         MR::calcWorldPositionFromScreen(pPos, ::getStarPointerController(channel)->mPastInfo.mPos, camZ);
     }
 
     void calcStarPointerWorldPointingPosInsideEdge(TVec3f* pPos, const TVec3f& rPos, s32 channel) {
+#ifdef TARGET_PC
+        if (channel == WPAD_CHAN0 && sVrRayValid[0]) {
+            pointAtDepthVr(pPos, sVrRayOrigin[0], sVrRayDir[0], rPos);
+            return;
+        }
+#endif
         f32 camZ = MR::calcCameraDistanceZ(rPos);
         MR::calcWorldPositionFromScreen(pPos, getStarPointerScreenPositionOrEdge(channel), camZ);
     }
 
     bool calcStarPointerPosOnPlane(TVec3f* pPos, const TVec3f& rPlaneBasePos, const TVec3f& rPlaneNorm, s32 channel, bool clampEdge) {
         ::getStarPointerController(channel);  // something stripped
+
+#ifdef TARGET_PC
+        if (channel == WPAD_CHAN0 && sVrRayValid[0]) {
+            if (crossPlaneVr(pPos, sVrRayOrigin[0], sVrRayDir[0], rPlaneBasePos, rPlaneNorm)) {
+                return true;
+            }
+            // Aimed along the plane or away from it: the ray's point at the
+            // base's depth, dropped onto the plane.
+            TVec3f at;
+            pointAtDepthVr(&at, sVrRayOrigin[0], sVrRayDir[0], rPlaneBasePos);
+            TVec3f off = at - rPlaneBasePos;
+            pPos->set(at);
+            pPos->sub(rPlaneNorm * off.dot(rPlaneNorm));
+            return true;
+        }
+#endif
 
         TVec2f screenPos;
         if (clampEdge) {
@@ -632,6 +717,19 @@ namespace MR {
     }
 
     bool calcStarPointerWorldVelocityDirectionOnPlane(TVec3f* pDir, const TVec3f& rPlaneBasePos, const TVec3f& rPlaneNorm, s32 channel) {
+#ifdef TARGET_PC
+        if (channel == WPAD_CHAN0 && sVrRayValid[0] && sVrRayValid[1]) {
+            TVec3f now, before;
+            if (!crossPlaneVr(&now, sVrRayOrigin[0], sVrRayDir[0], rPlaneBasePos, rPlaneNorm) ||
+                !crossPlaneVr(&before, sVrRayOrigin[1], sVrRayDir[1], rPlaneBasePos, rPlaneNorm)) {
+                return false;
+            }
+            pDir->set(now);
+            pDir->sub(before);
+            MR::normalizeOrZero(pDir);
+            return true;
+        }
+#endif
         StarPointerController* controller = ::getStarPointerController(channel);
         TVec3f camPos = MR::getCamPos();
         const TVec2f& posA = controller->mPastInfo.mPos;

@@ -2910,6 +2910,10 @@ void MarioActor::updateCameraInfo() {
     mCamDirY = MR::getCamYdir();
     _FA8 = mCamDirZ;
     mCamDirZ = MR::getCamZdir();
+#ifdef TARGET_PC
+    extern void portUpdateMarioScreenAxes();
+    portUpdateMarioScreenAxes();  // the diorama's axes for MarioModule::getCamDirX/Y/Z
+#endif
 }
 
 bool MarioActor::binderFilter(const Triangle* pTriangle) {

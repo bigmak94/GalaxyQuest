@@ -95,6 +95,30 @@ void Mario::calcShadowDir2D(const TVec3f& rVec, TVec3f* pOut) {
 void Mario::stick2Dadjust(f32& rStickX, f32& rStickY) {
     bool isNearHalfPi = false;
 
+#ifdef TARGET_PC
+    // The game camera only ever faces this arena (Tarantox's web) from its
+    // front, and what follows counts on it.  In the VR diorama the player
+    // may have turned the view round to its back: the mirror image, worked
+    // out as from the front with left and right swapped.
+    extern bool portMarioScreenAxesAreDiorama();
+    TVec3f screenX = getCamDirX();
+    TVec3f screenY = getCamDirY();
+    TVec3f screenZ = getCamDirZ();
+    {
+        TVec3f front(0.0f, 0.0f, -1.0f);
+        PSMTXMultVecSR(_F4, &front, &front);
+        if (portMarioScreenAxesAreDiorama() && screenZ.dot(front) < 0.0f) {
+            screenX = -screenX;
+            screenZ = -screenZ;
+            rStickX = -rStickX;
+        }
+    }
+#else
+    const TVec3f& screenX = getCamDirX();
+    const TVec3f& screenY = getCamDirY();
+    const TVec3f& screenZ = getCamDirZ();
+#endif
+
     if (_10.turning && mMovementStates._1 && !mMovementStates.jumping) {
         _10.turning = false;
         clear2DStick();
@@ -110,12 +134,10 @@ void Mario::stick2Dadjust(f32& rStickX, f32& rStickY) {
     PSMTXMultVecSR(_F4, &mNormal2D, &mNormal2D);
 
     TVec3f stack_38(0.0f, 1.0f, 0.0f);
-    TVec3f* camDirZ = &getCamDirZ();
-    f32 angle = MR::diffAngleSignedHorizontal(getCamDirY(), stack_38, *camDirZ);
+    f32 angle = MR::diffAngleSignedHorizontal(screenY, stack_38, screenZ);
 
     TVec3f stack_2C(1.0f, 0.0f, 0.0f);
-    camDirZ = &getCamDirZ();
-    const f32 absHorizontal = MR::diffAngleAbsHorizontal(getCamDirX(), stack_2C, *camDirZ);
+    const f32 absHorizontal = MR::diffAngleAbsHorizontal(screenX, stack_2C, screenZ);
     if (absHorizontal >= 3.0415928f && MR::abs(angle) >= 3.0415928f) {
         angle = 0.0f;
         rStickX = -rStickX;

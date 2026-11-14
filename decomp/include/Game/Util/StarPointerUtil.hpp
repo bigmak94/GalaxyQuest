@@ -60,6 +60,9 @@ namespace MR {
     // original aims star bits past its camera) and its distance along the
     // ray.  Returns false while the pointer does not aim into the diorama.
     bool calcVrPointerAimEnd(TVec3f* pEnd, f32* pReach, s32 channel);
+    // Takes the controller's aim ray of this frame (once a frame, from the
+    // first player's StarPointerController).
+    void updateVrPointerRay();
 #endif
     void calcStarPointerWorldPointingPos(TVec3f*, const TVec3f&, s32);
     void calcStarPointerWorldPointingPosInsideEdge(TVec3f*, const TVec3f&, s32);

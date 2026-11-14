@@ -991,21 +991,10 @@ void Mario::calcMoveDir(float stickX, float stickY, TVec3f* pMoveDir, bool isDis
     } else if (mMovementStates._3A) {
         calcMoveDir25D(stickX, stickY, pMoveDir);
     } else if (!isDisableMove || !retainMoveDir(stickX, stickY, pMoveDir)) {
-#ifdef TARGET_PC
-        // In the VR diorama the stick follows the diorama's axes: the world
-        // is always shown upright there, while the game camera (whose screen
-        // axes the stick normally follows) may be upside down, which swapped
-        // up with down and left with right.
-        TVec3f vrAxes[3];
-        const bool vrMove = port_vr_move_axes(&vrAxes[0].x, &vrAxes[1].x, &vrAxes[2].x) != 0;
-        const TVec3f& screenXDir = vrMove ? vrAxes[0] : getCamDirX();
-        const TVec3f& screenYDir = vrMove ? vrAxes[1] : getCamDirY();
-        TVec3f screenZDir = vrMove ? -vrAxes[2] : -getCamDirZ();
-#else
+        // (In the VR diorama these are the diorama's axes: MarioModule::getCamDirX.)
         const TVec3f& screenXDir = getCamDirX();
         const TVec3f& screenYDir = getCamDirY();
         TVec3f screenZDir = -getCamDirZ();
-#endif
         TVec3f groundXDir;
         TVec3f groundYDir;
         TVec3f groundYDirOrtho;

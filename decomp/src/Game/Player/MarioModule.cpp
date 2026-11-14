@@ -416,6 +416,37 @@ TVec3f& MarioModule::getCamPos() const {
     return mActor->mCamPos;
 }
 
+#ifdef TARGET_PC
+// In the VR diorama the player's "screen" is the diorama, not the game
+// camera: its right, up and away-from-the-player axes stand in for the
+// camera's wherever Mario's code works from the screen (the stick's
+// directions, also in the 2D sections and at Tarantox, the side a 2D Mario
+// faces).  The world is always shown upright there, while the game camera
+// may be rolled or upside down, which swapped left with right and up with
+// down.  Updated once a frame by MarioActor::updateCameraInfo.
+static TVec3f sDioramaDir[3];
+static bool sDioramaDirs = false;
+
+void portUpdateMarioScreenAxes() {
+    sDioramaDirs = port_vr_move_axes(&sDioramaDir[0].x, &sDioramaDir[1].x, &sDioramaDir[2].x) != 0;
+}
+
+bool portMarioScreenAxesAreDiorama() {
+    return sDioramaDirs;
+}
+
+TVec3f& MarioModule::getCamDirX() const {
+    return sDioramaDirs ? sDioramaDir[0] : mActor->mCamDirX;
+}
+
+TVec3f& MarioModule::getCamDirY() const {
+    return sDioramaDirs ? sDioramaDir[1] : mActor->mCamDirY;
+}
+
+TVec3f& MarioModule::getCamDirZ() const {
+    return sDioramaDirs ? sDioramaDir[2] : mActor->mCamDirZ;
+}
+#else
 TVec3f& MarioModule::getCamDirX() const {
     return mActor->mCamDirX;
 }
@@ -427,6 +458,7 @@ TVec3f& MarioModule::getCamDirY() const {
 TVec3f& MarioModule::getCamDirZ() const {
     return mActor->mCamDirZ;
 }
+#endif
 
 void MarioModule::startPadVib(u32 strength) {
     switch (strength) {

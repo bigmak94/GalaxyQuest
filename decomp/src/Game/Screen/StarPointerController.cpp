@@ -45,6 +45,11 @@ void StarPointerController::movement(const f32* pProjectionParams, const f32* pV
 }
 
 void StarPointerController::storeDataFromCallback(const f32* pProjectionParams, const f32* pViewportParams) {
+#ifdef TARGET_PC
+    if (mPadChannel == WPAD_CHAN0) {
+        MR::updateVrPointerRay();
+    }
+#endif
     TVec3f v1(mInfo.mPos.x, mInfo.mPos.y, static_cast< f32 >(mInfo.mZDepth));
 
     if (mInfo.mDrawReady == true) {
