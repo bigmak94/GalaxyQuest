@@ -5,8 +5,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.galaxy.quest"
-    android:versionCode="11"
-    android:versionName="0.1.10"
+    android:versionCode="12"
+    android:versionName="0.1.11"
     android:installLocation="auto">
 
     <uses-sdk android:minSdkVersion="32" android:targetSdkVersion="34" />
