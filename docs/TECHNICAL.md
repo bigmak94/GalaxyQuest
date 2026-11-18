@@ -382,6 +382,11 @@ In the diorama:
   turned with the gravity of each planet on the way, and for a pipe the
   camera pulls back to show the whole planet, which put the viewer inside
   it.
+- Cannons (`MarioLauncher`) report themselves the same way, from the moment
+  the sight appears until Mario lands or climbs back out. The shot goes
+  along the game camera's ray through the cursor, and that camera sits in
+  the cannon's mouth: in the diorama the player saw the cannon from outside
+  with the sight on the HUD panel, and could not tell where it aimed.
 - Screen wipes (fades, and the ring that closes on Mario) cover the whole
   view instead of the HUD panel.
 - Water and heat haze sample a capture of the screen where each surface

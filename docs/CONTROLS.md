@@ -67,6 +67,10 @@ laser never counts as a shake.
   away until he is in view again.
 - Choosing a galaxy in the observatory domes, and the first-person view,
   happen on the virtual screen.
+- So does aiming a cannon: once Mario is inside, the screen shows the
+  cannon's view. Point at the screen to move the sight (near the edges the
+  view turns), press **A** to fire, or the right trigger to climb back out.
+  The diorama returns when Mario lands.
 
 ## Skipping cutscenes and dialogues
 

@@ -473,6 +473,14 @@ bool MarioLauncher::doAim() {
     }
 
     MR::startStarPointerModeMarioLauncher(this);
+#ifdef TARGET_PC
+    // The cannon is aimed through its own view, by pointing at the screen:
+    // the VR layer shows that view on its screen from here until Mario
+    // lands or climbs back out.  In the diorama the player saw the cannon
+    // from outside and the sight on the HUD, with no way to tell where the
+    // shot would go.
+    port_vr_transit_begin(this);
+#endif
     setNerve(GET_NERVE(MarioLauncher, MarioLauncherNrvAim));
 
     return true;
@@ -494,6 +502,9 @@ bool MarioLauncher::doReject() {
     MR::endLauncherCamera();
     MR::resetCameraMan();
     MR::endStarPointerMode(this);
+#ifdef TARGET_PC
+    port_vr_transit_end(this);
+#endif
     MR::invalidateHitSensor(this, "Shell");
     mLayout->kill();
 
@@ -624,6 +635,9 @@ bool MarioLauncher::doLanding(s32 msg) {
     MR::invalidateHitSensor(this, "Shell");
     MR::deleteEffect(this, "LocusSmoke");
     MR::deleteEffect(this, "Gravity");
+#ifdef TARGET_PC
+    port_vr_transit_end(this);
+#endif
 
     if (!MR::isBindedGround(mShell)) {
         MR::startBckPlayer("WallHit", ::sInterpolateTest1);
