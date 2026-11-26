@@ -164,6 +164,20 @@ extern "C" void port_headless_xrsim(const char* path, int frames, float yawDeg, 
             sTurnsDone = index + 1;
         }
     }
+    // PETARI_XRSIM_STICK="t0-t1:x;...": the right stick pushed sideways by x
+    // (-1..1) from t0 to t1 s after boot, for smooth turning (smooth_turn).
+    if (const char* stick = getenv("PETARI_XRSIM_STICK")) {
+        const char* t0env = getenv("PETARI_T0_MS");
+        double now = (port_host_time_ns() / 1000000 - (t0env ? atoll(t0env) : 0)) / 1000.0;
+        float push = 0.0f;
+        for (const char* p = stick; p && *p; p = strchr(p, ';') ? strchr(p, ';') + 1 : nullptr) {
+            float t0, t1, x;
+            if (sscanf(p, "%f-%f:%f", &t0, &t1, &x) == 3 && now >= t0 && now < t1) push = x;
+        }
+        vr::setSmoothTurn(vr::smoothTurning() ? push : 0.0f);
+        bool camera = vr::smoothTurnOn() && !vr::smoothTurning();  // the giant screen: the game camera (as xr_app.cpp)
+        port_input_set_camera_turn(camera ? push : 0.0f, camera ? vr::smoothTurnSpeed() : 0.0f);
+    }
     for (int i = 0; i < frames; i++) {
         sTime += 1.0 / 72.0;
         fi.time = sTime;

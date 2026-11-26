@@ -195,8 +195,23 @@ int main(int argc, char** argv) {
             if (envSet("PETARI_XRSIM")) {
                 // The headset presentation (vr_game.cpp) with simulated eyes.
                 void (*xrsim)(const char*, int, float, float) = (void (*)(const char*, int, float, float))dlsym(lib, "port_headless_xrsim");
+                // PETARI_XRHEAD="yaw,pitch" (degrees), or "t:yaw,pitch;..." to
+                // turn the head t s after boot (the last entry due applies).
                 float yaw = 0, pitch = -20;
-                if (envSet("PETARI_XRHEAD")) sscanf(envSet("PETARI_XRHEAD"), "%f,%f", &yaw, &pitch);
+                if (envSet("PETARI_XRHEAD")) {
+                    const char* spec = envSet("PETARI_XRHEAD");
+                    if (!strchr(spec, ':')) {
+                        sscanf(spec, "%f,%f", &yaw, &pitch);
+                    } else {
+                        for (const char* p = spec; p && *p; p = strchr(p, ';') ? strchr(p, ';') + 1 : NULL) {
+                            float t, y, pi;
+                            if (sscanf(p, "%f:%f,%f", &t, &y, &pi) == 3 && (now - start) / 1000.0 >= t) {
+                                yaw = y;
+                                pitch = pi;
+                            }
+                        }
+                    }
+                }
                 snprintf(shot, sizeof(shot), "%s/../shots/frame_%03d_xr.png", argv[2], shotIndex);
                 // PETARI_XRSIM_STEPS: display frames simulated per snapshot
                 // (1 with PETARI_XRSIM_FPS for a continuous sequence).
