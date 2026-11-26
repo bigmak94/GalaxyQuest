@@ -1783,7 +1783,26 @@ Extent renderEye(int eye, const FrameInfo& frame, GLuint fbo, int width, int hei
             }
         }
         auto lin = [](unsigned int c) { float f = c / 255.0f; return f * f; };  // near enough for black / white
-        glUniform4f(blit.wipe, wipeClosed, wipeKind == 0 ? 0.0f : 1.0f, cx, cy);
+        // The ring opens to 1.6 eye heights round its centre, which clears
+        // the view only while the centre (Mario) is on it.  Turning the head
+        // away from Mario puts him far off the view's side, and a ring left
+        // open on the screen (as in the Comet Observatory) blacked out all
+        // but a curved patch of the view.  Fully open, a wipe draws nothing;
+        // part closed, the ring's full size reaches the view's farthest
+        // corner from its centre.
+        float wipeShader = wipeClosed;
+        if (wipeClosed <= 0.0f) {
+            wipeKind = 0;
+        } else if (wipeKind != 0) {
+            float aspect = (float)used.width / (float)used.height, reach = 1.6f;
+            for (float x : {0.0f, 1.0f}) {
+                for (float y : {0.0f, 1.0f}) {
+                    reach = fmaxf(reach, hypotf((x - cx) * aspect, y - cy) + 0.02f);
+                }
+            }
+            wipeShader = 1.0f - (1.0f - wipeClosed) * reach / 1.6f;  // the shader's radius: (1 - closed) * 1.6
+        }
+        glUniform4f(blit.wipe, wipeShader, wipeKind == 0 ? 0.0f : 1.0f, cx, cy);
         glUniform4f(blit.wipeColor, lin((wipeRgb >> 16) & 255), lin((wipeRgb >> 8) & 255), lin(wipeRgb & 255), (float)used.width / (float)used.height);
         glBindVertexArray(sVao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
