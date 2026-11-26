@@ -82,6 +82,8 @@ bool giantOn() { return setting("giant_screen"); }
 bool stereoOn() { return setting("stereo_screen"); }
 bool passthroughUsable() { return vr::passthroughAvailable(); }
 bool sharpenOn() { return setting("sharpening"); }
+bool smoothTurnOn() { return setting("smooth_turn"); }
+bool snapTurnOn() { return !setting("smooth_turn"); }
 bool severalLanguages() { return port_language_count() > 1; }
 
 void hintScreenOnly(char* out, size_t size, const char* hint) { snprintf(out, size, "%s", giantOn() ? hint : "Only on the giant screen"); }
@@ -210,6 +212,9 @@ const Item kGameItems[] = {
     {"language", "Language", nullptr, kStepper, 0, 0, 0, nullptr, severalLanguages, hintLanguage, languageOptions, languageText, languageGet,
      languageSet, languageFile},
     {"invert_camera", "Invert camera", nullptr, kSwitch, 0, 0, 0, nullptr, nullptr, hintInvert},
+    {"smooth_turn", "Smooth turning", "The right stick turns the view steadily", kSwitch},
+    {"smooth_turn_speed", "Turn speed", "With the stick pushed all the way", kSlider, 30.0f, 240.0f, 15.0f, "%.0f deg/s", smoothTurnOn},
+    {"snap_turn_angle", "Snap turn angle", "Diorama: a flick of the right stick", kStepper, 15.0f, 90.0f, 15.0f, "%.0f deg", snapTurnOn},
     {"spin_shake_strength", "Spin shake strength", "Lower needs a gentler shake", kSlider, 0.2f, 1.6f, 0.1f, nullptr, nullptr, nullptr, nullptr,
      spinStrengthText},
     {"skip_hold", "Hold A to skip", "Cutscenes and dialogues", kStepper, 0.0f, 3.0f, 0.25f, nullptr, nullptr, nullptr, nullptr, skipText},

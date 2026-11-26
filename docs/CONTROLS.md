@@ -18,7 +18,7 @@ controllers are mapped onto them like this. The mapping lives in
 | Left grip | C | Put the camera behind Mario |
 | Menu (left) | + | Pause menu (one press) |
 | X | − | Pause menu (one press) |
-| Right stick left / right | D-pad left / right | In the diorama: turn it a step (45°) round Mario, behind a short blink. On the giant screen: turn the game camera around Mario in steps, where the level allows it. Pushing the stick right turns the view to the right; with *Invert camera* off (see the VR settings) it moves the camera to the right instead, as the Wii's D-pad did |
+| Right stick left / right | D-pad left / right | In the diorama: turn it a step (45°, see *Snap turn angle*) round Mario, behind a short blink, or steadily with *Smooth turning* on. On the giant screen: turn the game camera around Mario in steps, or steadily with *Smooth turning* on, where the level allows it. Pushing the stick right turns the view to the right; with *Invert camera* off (see the VR settings) it moves the camera to the right instead, as the Wii's D-pad did |
 | Right stick up, or click | D-pad up | First-person look (shown on the virtual screen); page up in lists |
 | Right stick down | D-pad down | Page down in lists |
 
@@ -250,6 +250,19 @@ has no effect as things are (the 3D depth while the 3D is off) is dimmed.
   camera the way you push it, as the Wii's D-pad did. It only swaps the
   camera's turns: the D-pad's left and right still turn pages the usual
   way.
+- **Smooth turning** (off by default): the right stick turns the view
+  steadily for as long as you hold it, faster the further you push it,
+  instead of in steps. In the diorama the world turns round Mario with no
+  blink; the *Turn vignette* (Diorama tab) darkens the edges of the view
+  while it turns. On the giant screen, 3D or not, the game camera turns
+  round Mario where the level lets it turn at all: smoothly in open areas,
+  and where the camera only has set angles (round towers, some bosses), a
+  step each time the stick has turned as far. The D-pad's left and right
+  still turn pages and menus.
+- **Turn speed**: how fast smooth turning goes with the stick pushed all
+  the way, 30 to 240 degrees a second (60 by default).
+- **Snap turn angle**: the step of a flick of the right stick in the
+  diorama while smooth turning is off, 15 to 90 degrees (45 by default).
 - **Spin shake strength**: how fast to shake either controller to spin,
   20% to 160% in steps of 10%. Lower values need a gentler shake. The
   default, 100%, keeps the original 2.5 m/s threshold. Drag the slider or
@@ -300,6 +313,13 @@ invert_camera = 1
 # Speed needed to shake either controller to spin, relative to the original
 # 2.5 m/s (0.2 to 1.6; 1 = 100%, the default). Lower needs a gentler shake.
 spin_shake_strength = 1
+# 1: the right stick turns the view steadily, at up to smooth_turn_speed
+# degrees a second (30 to 240): the diorama, or on the giant screen the
+# game camera; 0: in steps (in the diorama of snap_turn_angle degrees,
+# 15 to 90, behind a blink)
+smooth_turn = 0
+smooth_turn_speed = 60
+snap_turn_angle = 45
 # The game's language, among those the disc has: english, french, german,
 # spanish or italian on the European disc, english, french or spanish on
 # the American one (the Japanese and Korean discs have their own only).
@@ -369,7 +389,7 @@ stereo_resolution = 0.8
 # game_path = /storage/emulated/0/Download/cooked
 # 1 turns the diorama with the game camera as it swings round Mario (as
 # early versions did); 0 keeps the world's facing, and the right stick
-# turns it in 45 degree steps.
+# turns it (in snap_turn_angle steps, or smoothly with smooth_turn).
 turn_with_camera = 0
 # Ask the headset for high CPU and GPU clock levels (Meta's SustainedHigh,
 # the CPU at 1.92 GHz on Quest 3). 0 leaves the clocks to the system, which

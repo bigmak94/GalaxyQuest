@@ -428,6 +428,15 @@ float sStereoSize = 0.8f;     // each picture's size relative to the screen's si
 float sSkipHold = 1.0f;       // seconds A is held to skip a cutscene (skip_hold)
 bool sInvertCamera = true;    // the right stick's turns swapped (invert_camera)
 float sSpinShakeStrength = 1.0f;  // controller speed needed to spin, relative to the original 2.5 m/s
+// The right stick turns the diorama smoothly instead of in steps
+// (smooth_turn), at up to sSmoothTurnSpeed deg/s (smooth_turn_speed); a
+// step is sSnapTurnAngle degrees (snap_turn_angle).
+bool sSmoothTurn = false;
+float sSmoothTurnSpeed = 60.0f;
+float sSnapTurnAngle = 45.0f;
+// The stick's push for the smooth turn, -1..1 (positive: the view goes round
+// Mario to the right), from the input thread.
+std::atomic<float> sSmoothTurnPush{0.0f};
 // How far the view is pitched up, degrees, on the giant screen and in the
 // diorama (screen_tilt, diorama_tilt; xr_app.cpp tilts the app's space).
 float sScreenTilt = 0.0f, sDioramaTilt = 0.0f;
@@ -971,6 +980,9 @@ vr::Setting sSettings[] = {
          port_input_set_camera_inverted(sInvertCamera);
      }},
     {"spin_shake_strength", 0.2f, 1.6f, 0.0f, NUMBER(sSpinShakeStrength)},
+    {"smooth_turn", 0.0f, 1.0f, 0.0f, FLAG(sSmoothTurn)},
+    {"smooth_turn_speed", 15.0f, 360.0f, 0.0f, NUMBER(sSmoothTurnSpeed)},
+    {"snap_turn_angle", 10.0f, 90.0f, 0.0f, NUMBER(sSnapTurnAngle)},
     {"resolution", 0.5f, 2.0f, 0.0f, NUMBER(sResolution)},
     {"min_resolution", 0.5f, 1.25f, 0.0f, NUMBER(sMinScale)},
     {"view_margin", 0.0f, 0.3f, 0.0f, NUMBER(sViewMargin)},
@@ -1092,10 +1104,14 @@ float viewMargin() { return sShownVrMode ? sViewMargin : 0.0f; }
 bool superResolution() { return sSuperRes; }
 bool snapTurn(int dir) {
     if (!sVrMode || !sRig.valid || sRigParams.turnWithCamera || dir == 0) return false;
-    sRig.pendingTurn += (dir > 0 ? 1.0f : -1.0f) * 0.78539816f;
+    sRig.pendingTurn += (dir > 0 ? 1.0f : -1.0f) * sSnapTurnAngle * 0.017453293f;
     port_log("vr: snap turn %s", dir > 0 ? "right" : "left");
     return true;
 }
+bool smoothTurning() { return sSmoothTurn && sVrMode && sRig.valid && !sRigParams.turnWithCamera; }
+bool smoothTurnOn() { return sSmoothTurn; }
+float smoothTurnSpeed() { return sSmoothTurnSpeed * 0.017453293f; }
+void setSmoothTurn(float push) { sSmoothTurnPush.store(push > 1.0f ? 1.0f : push < -1.0f ? -1.0f : push); }
 
 // ---------------------------------------------------------------------------
 // Dynamic resolution.  The game renders each eye into a target of the
@@ -1611,6 +1627,9 @@ void beginFrame(const FrameInfo& frame) {
     if (sVrMode) {
         bool wasValid = sRig.valid;
         xm::Vec3 prevPivot = sRig.pivot;
+        if (smoothTurning()) {
+            sRig.turnBy = sSmoothTurnPush.load() * sSmoothTurnSpeed * 0.017453293f * dt;
+        }
         sStageFromView = updateRig(sRig, sRigParams, r.camera(), dt);
         static const bool sRigLog = getenv("PETARI_RIGLOG") != nullptr;
         if (sRigLog && wasValid && (sRig.snapped || sRig.turnRate > 1.0f)) {

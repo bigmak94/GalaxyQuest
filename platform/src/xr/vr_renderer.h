@@ -169,6 +169,15 @@ bool superResolution();
 // press is the game's D-pad then) unless the diorama is shown with its own
 // yaw (not turn_with_camera).
 bool snapTurn(int dir);
+// Smooth turning instead (the smooth_turn setting, with the diorama shown
+// as snapTurn needs): the right stick's push sideways, -1..1, turns the view
+// round Mario at up to smooth_turn_speed deg/s, from the next frame on.
+bool smoothTurning();
+void setSmoothTurn(float push);
+// The smooth_turn setting itself, and smooth_turn_speed in rad/s: where the
+// diorama is not shown, the stick turns the game camera smoothly.
+bool smoothTurnOn();
+float smoothTurnSpeed();
 // The render scale now (the dynamic resolution moves it between the
 // min_resolution and resolution settings), and the scale of the screen's 3D
 // pictures (the giant screen's gameplay): 1 is the full picture, and the

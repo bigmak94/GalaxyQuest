@@ -115,6 +115,19 @@ void CameraFollow::calcIdealPos() {
     MR::crossToPolar(watchPos, pos, &length, &angleX, &angleY);
     constrainAngleX(&angleX);
     constrainAngleY(&angleY, front, length);
+#ifdef TARGET_PC
+    {
+        // Smooth turning (smooth_turn): the stick turns it a little each
+        // frame, where a step that way would be allowed (no wall within it).
+        f32 turn = CameraLocalUtil::portSmoothRound();
+        if (isUpsideDownByRoll()) {
+            turn = -turn;  // as the D-pad's sides swap
+        }
+        if ((turn < 0.0f && mIsRoundLeftValid) || (turn > 0.0f && mIsRoundRightValid)) {
+            angleY += turn;
+        }
+    }
+#endif
     MR::polarToCross(watchPos, &pos, length, angleX, angleY);
     checkShiftStateToRound(watchPos, pos);
 

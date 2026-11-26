@@ -28,6 +28,9 @@ public:
     void arrangeRoundingPose();
     void arrangeHorizontalPose();
     bool isUpsideDownByRoll() const;
+#ifdef TARGET_PC
+    void portApplySmoothYaw();
+#endif
 
     /* 0x4C */ TVec3f mWPoint;
     /* 0x58 */ TVec3f mAxis;
@@ -40,4 +43,10 @@ public:
     /* 0x84 */ f32 mAngleYSpeed;
     /* 0x88 */ bool mIsRoundLeftValid;
     /* 0x89 */ bool mIsRoundRightValid;
+#ifdef TARGET_PC
+    // Smooth turning (smooth_turn): the stick's turn so far, radians round
+    // the watched point, within the reach of the camera's own steps.
+    f32 mPortSmoothYaw = 0.0f;
+    bool mPortSmoothReset = false;
+#endif
 };

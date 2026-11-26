@@ -291,6 +291,60 @@ namespace CameraLocalUtil {
         return MR::testSubPadTriggerC(WPAD_CHAN0);
     }
 
+#ifdef TARGET_PC
+    // Smooth turning (smooth_turn) off the diorama.  The follow and parallel
+    // cameras turn by portSmoothRound() each frame; the others only turn in
+    // steps, and get one as the stick is pushed, then another each time it
+    // has turned as far as a step would (portRoundStep).  The D-pad's own
+    // left and right still turn pages and menus.
+    static u64 sSmoothCameraFrame = 0;
+    static bool sSmoothCameraSeen = false;
+
+    f32 portSmoothRound() {
+        if (!port_input_camera_turn_on()) {
+            return 0.0f;
+        }
+        sSmoothCameraFrame = port_gx_recording_frame();
+        sSmoothCameraSeen = true;
+        if (MR::isDemoActive() || MR::isFirstPersonCamera()) {
+            return 0.0f;
+        }
+        return port_input_camera_turn();
+    }
+
+    // -1, 0 or 1: a step "round left" or "round right" this frame.
+    static s32 portRoundStep() {
+        static u64 sFrame = ~0ull;
+        static s32 sStep = 0, sDir = 0;
+        static f32 sTurned = 0.0f;
+        u64 frame = port_gx_recording_frame();
+        if (frame != sFrame) {
+            sFrame = frame;
+            sStep = 0;
+            f32 turn = port_input_camera_turn();
+            s32 dir = turn > 0.0f ? 1 : turn < 0.0f ? -1 : 0;
+            if (dir == 0) {
+                sDir = 0;
+            } else if (dir != sDir) {
+                sDir = dir;
+                sStep = dir;
+                sTurned = 0.0f;
+            } else {
+                sTurned += MR::abs(turn);
+                if (sTurned >= JGeometry::TUtil< f32 >::PI() / 4.0f) {
+                    sTurned -= JGeometry::TUtil< f32 >::PI() / 4.0f;
+                    sStep = dir;
+                }
+            }
+        }
+        // A camera that turns smoothly (within the last frames) has it.
+        if (sSmoothCameraSeen && frame - sSmoothCameraFrame <= 2) {
+            return 0;
+        }
+        return sStep;
+    }
+#endif
+
     bool testCameraPadTriggerRoundLeft() {
         if (MR::isDemoActive()) {
             return false;
@@ -301,6 +355,9 @@ namespace CameraLocalUtil {
         }
 
 #ifdef TARGET_PC
+        if (port_input_camera_turn_on()) {
+            return portRoundStep() < 0;
+        }
         // The invert_camera setting: left and right swapped.
         if (port_input_camera_inverted()) {
             return MR::testCorePadTriggerRight(WPAD_CHAN0);
@@ -319,6 +376,9 @@ namespace CameraLocalUtil {
         }
 
 #ifdef TARGET_PC
+        if (port_input_camera_turn_on()) {
+            return portRoundStep() > 0;
+        }
         if (port_input_camera_inverted()) {
             return MR::testCorePadTriggerLeft(WPAD_CHAN0);
         }

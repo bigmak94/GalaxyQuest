@@ -120,8 +120,14 @@ xm::Mat4 updateRig(RigState& rig, const RigParams& params, const gpu::CameraInfo
         rig.forward = xm::normalize(flatten(turn(rig.forward, rig.up, rig.pendingTurn), rig.up));
     }
     rig.pendingTurn = 0.0f;
+    // A smooth turn goes into the turn rate (the comfort vignette).
+    xm::Vec3 fwdBeforeTurn = rig.forward;
+    if (rig.valid && !rig.snapped && rig.turnBy != 0.0f) {
+        rig.forward = xm::normalize(flatten(turn(rig.forward, rig.up, rig.turnBy), rig.up));
+    }
+    rig.turnBy = 0.0f;
     if (!rig.snapped) {
-        xm::Vec3 prevUp = rig.up, prevFwd = rig.forward;
+        xm::Vec3 prevUp = rig.up, prevFwd = fwdBeforeTurn;
         // Follow Mario once he is more than followDeadZone away along the
         // ground: small steps back and forth leave the world where it is.
         xm::Vec3 d = target - rig.pivot;

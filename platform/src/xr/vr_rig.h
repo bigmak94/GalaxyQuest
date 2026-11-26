@@ -48,6 +48,9 @@ struct RigState {
     // Snap turns asked for (radians about up; positive: the view goes round
     // Mario to the right), done at the next update.
     float pendingTurn = 0.0f;
+    // A smooth turn for the next update (radians about up, same sign): the
+    // world turns that much at once, with no blink (smooth_turn).
+    float turnBy = 0.0f;
     // Mario's up followed within about 0.1 s: gravity that jumps away from it
     // changed suddenly (a switch, a room's wall), not by Mario running round
     // a small planet (that it keeps up with).

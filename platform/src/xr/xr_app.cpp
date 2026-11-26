@@ -854,12 +854,27 @@ void updateInput(App& a, XrTime time) {
     // D-pad's sides for its camera, CameraLocalUtil.cpp): pushing the stick
     // right turns the view to the right.  Up is the first-person view.  A
     // direction engages past 0.7 and releases below 0.4, one press per flick.
+    // With the smooth_turn setting, left/right turn steadily instead, faster
+    // the further the stick is pushed (past a dead zone, and not while it is
+    // pushed mostly up or down): the diorama, or elsewhere (the giant
+    // screen) the game camera, where the level lets it turn (the game's
+    // side applies invert_camera there, CameraLocalUtil.cpp).  The D-pad's
+    // left and right still go to the game off the diorama, for pages and
+    // menus; the camera no longer takes them then.
     XrVector2f look = getVec2(a, a.lookAction);
     float lx = fabsf(look.x), ly = fabsf(look.y);
+    bool smooth = vr::smoothTurning();
+    float stick = 0.0f;
+    if (vr::smoothTurnOn() && lx > 0.2f && lx >= ly * 0.75f) {
+        stick = (look.x < 0.0f ? -1.0f : 1.0f) * fminf(1.0f, (lx - 0.2f) / 0.7f);
+    }
+    vr::setSmoothTurn(smooth ? stick * (vr::invertCamera() ? -1.0f : 1.0f) : 0.0f);
+    bool cameraSmooth = vr::smoothTurnOn() && !smooth;
+    port_input_set_camera_turn(cameraSmooth ? stick : 0.0f, cameraSmooth ? vr::smoothTurnSpeed() : 0.0f);
     if (a.dpad == 0) {
         if (lx > 0.7f && lx >= ly) {
             a.dpad = look.x < 0.0f ? W_LEFT : W_RIGHT;
-            a.dpadTurned = vr::snapTurn((look.x < 0.0f ? -1 : 1) * (vr::invertCamera() ? -1 : 1));
+            a.dpadTurned = smooth || vr::snapTurn((look.x < 0.0f ? -1 : 1) * (vr::invertCamera() ? -1 : 1));
         } else if (ly > 0.7f) {
             a.dpad = look.y > 0.0f ? W_UP : W_DOWN;
         }

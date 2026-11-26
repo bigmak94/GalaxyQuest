@@ -60,6 +60,23 @@ extern "C" void port_input_set_camera_inverted(int inverted) { sCameraInverted.s
 
 extern "C" int port_input_camera_inverted(void) { return sCameraInverted.load(); }
 
+// Smooth turning of the game camera (the smooth_turn setting where the
+// diorama is not shown), see compat.h.
+static std::atomic<float> sCameraTurnPush{0.0f};   // the right stick sideways, -1..1, right positive
+static std::atomic<float> sCameraTurnSpeed{0.0f};  // rad/s with the stick pushed all the way; 0: off
+
+extern "C" void port_input_set_camera_turn(float push, float radPerSecond) {
+    sCameraTurnPush.store(push);
+    sCameraTurnSpeed.store(radPerSecond);
+}
+
+extern "C" int port_input_camera_turn_on(void) { return sCameraTurnSpeed.load() > 0.0f; }
+
+extern "C" float port_input_camera_turn(void) {
+    float turn = sCameraTurnPush.load() * sCameraTurnSpeed.load() / 60.0f;  // a game frame's worth
+    return sCameraInverted.load() ? -turn : turn;
+}
+
 static std::atomic<int64_t> sTiltUsedAt{0};
 static std::atomic<float> sTiltNeutralPitch{0.0f};
 

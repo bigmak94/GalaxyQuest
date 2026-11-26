@@ -91,6 +91,19 @@ void CameraParallel::calcRound() {
     if (!mIsEnableValid) {
         return;
     }
+#ifdef TARGET_PC
+    // Smooth turning (smooth_turn): the stick turns it a little each frame.
+    f32 smoothTurn = CameraLocalUtil::portSmoothRound();
+    if (smoothTurn != 0.0f && !mIsRounding) {
+        mRoundAngle += smoothTurn;
+        if (mRoundAngle > MR::pi()) {
+            mRoundAngle -= MR::pi() * 2.0f;
+        } else if (mRoundAngle < -MR::pi()) {
+            mRoundAngle += MR::pi() * 2.0f;
+        }
+        return;
+    }
+#endif
 
     if (mIsRounding) {
         if (mRoundTarget > mRoundAngle) {

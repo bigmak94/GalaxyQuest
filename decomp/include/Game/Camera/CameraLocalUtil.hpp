@@ -71,4 +71,11 @@ namespace CameraLocalUtil {
     void arrangeDistanceByFovy(Camera*, TVec3f, f32);
     void arrangeDistanceByPushAndPull(Camera*, f32, f32);
     void calcSafePose(CameraMan*, Camera*);
+#ifdef TARGET_PC
+    // The smooth_turn setting off the diorama: this frame's turn for a
+    // camera that turns smoothly (radians, positive the way "round right"
+    // goes; 0 when there is none).  Calling it tells the D-pad's round
+    // triggers that this camera takes the stick smoothly.
+    f32 portSmoothRound();
+#endif
 };  // namespace CameraLocalUtil

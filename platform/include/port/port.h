@@ -136,6 +136,10 @@ int port_input_real_a(void);  // controller 0's A button as the player presses i
 // game's side is port_input_camera_inverted in port/compat.h).
 void port_input_set_camera_inverted(int inverted);
 int port_input_camera_inverted(void);
+// Smooth turning of the game camera: the right stick's push sideways (-1..1,
+// right positive) and the speed at a full push, rad/s (0: smooth turning
+// off, the stick's flicks are the D-pad's); the game's side is in compat.h.
+void port_input_set_camera_turn(float push, float radPerSecond);
 
 // Frame-time statistics (platform/src/port/perf.cpp), logged every 10 s.
 void port_perf_frame_begin(void);      // the game thread starts a frame

@@ -248,4 +248,54 @@ void CameraTower::arrangeRound() {
     }
 
     mPos.set(CameraLocalUtil::getPos(this));
+#ifdef TARGET_PC
+    portApplySmoothYaw();
+#endif
 }
+
+#ifdef TARGET_PC
+// Smooth turning (smooth_turn): the camera's own steps are 45 degree slots
+// it eases into and holds; instead the pose it settles on is turned round
+// the watched point by the stick's turn so far, as far as its steps could
+// go.  Its own state never sees the turn (mPos is taken before), so it
+// keeps framing the tower as usual.  The camera reset button brings the
+// turn back.
+void CameraTower::portApplySmoothYaw() {
+    f32 turn = CameraLocalUtil::portSmoothRound();
+    if (!port_input_camera_turn_on()) {
+        mPortSmoothYaw = 0.0f;
+        mPortSmoothReset = false;
+        return;
+    }
+    if (isUpsideDownByRoll()) {
+        turn = -turn;  // as the D-pad's sides swap
+    }
+    s32 maxDivNum = (s32)((mAngleYRoundSpeed + (::sRoundInterval / 2)) / ::sRoundInterval);
+    f32 range = maxDivNum * ::sRoundInterval;
+    if (CameraLocalUtil::tryCameraReset()) {
+        mPortSmoothReset = true;
+    }
+    if (turn != 0.0f) {
+        mPortSmoothReset = false;
+    }
+    if (mPortSmoothReset) {
+        mPortSmoothYaw *= 0.8f;
+        if (MR::abs(mPortSmoothYaw) < 0.001f) {
+            mPortSmoothYaw = 0.0f;
+            mPortSmoothReset = false;
+        }
+    }
+    mPortSmoothYaw = MR::clamp(mPortSmoothYaw + turn, -range, range);
+    if (mPortSmoothYaw == 0.0f) {
+        return;
+    }
+
+    TVec3f pos = CameraLocalUtil::getPos(this);
+    f32 length, angleX, angleY;
+    MR::crossToPolar(CameraLocalUtil::getWatchPos(this), pos, &length, &angleX, &angleY);
+    TVec3f newPos;
+    MR::polarToCross(CameraLocalUtil::getWatchPos(this), &newPos, length, angleX, angleY + mPortSmoothYaw);
+    newPos.y = pos.y;
+    CameraLocalUtil::setPos(this, newPos);
+}
+#endif

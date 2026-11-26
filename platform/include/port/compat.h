@@ -210,6 +210,12 @@ void port_input_discard_pause_request(void);
 // turn the game camera round Mario (and nowhere else: pages and menus keep
 // theirs), so pushing the right stick right turns the view to the right.
 int port_input_camera_inverted(void);
+// The smooth_turn setting off the diorama: on (1) while the right stick
+// turns the game camera smoothly, and this game frame's turn, radians,
+// positive the way the D-pad's "round right" goes (invert_camera applied).
+int port_input_camera_turn_on(void);
+float port_input_camera_turn(void);
+uint64_t port_gx_recording_frame(void);
 int64_t port_host_time_ns(void);
 void port_host_sleep_ns(int64_t ns);
 // Delivers pending interrupts (a safe point; only from the thread holding the
